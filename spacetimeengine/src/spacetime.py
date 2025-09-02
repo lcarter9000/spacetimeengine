@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from sympy import *
+import matplotlib.pyplot as plt
+import numpy as np
 
 class SpaceTime:
 
@@ -2986,3 +2988,28 @@ class SpaceTime:
         for mu in self.dimensions:
             for nu in self.dimensions:
                 self.print_schouten_coefficient(index_config, mu, nu)
+
+    def plot_ricci_scalar_grid(self, x_range, y_range, x_index=0, y_index=1, num_points=100):
+        """
+        Plots the Ricci scalar over a grid defined by x_range and y_range.
+        Assumes coordinate_set[x_index] and coordinate_set[y_index] are the spatial coordinates.
+        """
+        x_vals = np.linspace(x_range[0], x_range[1], num_points)
+        y_vals = np.linspace(y_range[0], y_range[1], num_points)
+        ricci_grid = np.zeros((num_points, num_points))
+
+        # Substitute values into Ricci scalar
+        ricci_expr = self.ricci_scalar
+        x_sym = self.coordinate_set[x_index]
+        y_sym = self.coordinate_set[y_index]
+
+        for i, x in enumerate(x_vals):
+            for j, y in enumerate(y_vals):
+                ricci_grid[j, i] = float(ricci_expr.subs({x_sym: x, y_sym: y}))
+
+        plt.imshow(ricci_grid, extent=(x_range[0], x_range[1], y_range[0], y_range[1]), origin='lower')
+        plt.colorbar(label='Ricci Scalar')
+        plt.xlabel(str(x_sym))
+        plt.ylabel(str(y_sym))
+        plt.title('Spacetime Ricci Scalar Curvature')
+        plt.show()
