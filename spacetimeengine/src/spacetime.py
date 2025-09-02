@@ -972,7 +972,7 @@ class SpaceTime:
     """       
     
     def get_connection_coefficient(self, index_config, i, k, l):
-        """
+        r"""
         Description
         ===========
         Gets a single connection coefficients from class object.
@@ -1006,7 +1006,7 @@ class SpaceTime:
             print("Invalid index_config string.")     
         
     def set_connection_coefficient(self, index_config, i, k, l, expression):
-        """
+        r"""
         Description
         ===========
         Sets a single connection coefficient equal to a given expression.
@@ -1040,7 +1040,7 @@ class SpaceTime:
             print("Invalid index_config string.")        
     
     def set_all_connection_coefficients(self, index_config):
-        """
+        r"""
         Description
         ===========
         Sets all connection coefficient values for reuse. Allows for the removal of redundant calculations.
@@ -1094,7 +1094,7 @@ class SpaceTime:
             print("Invalid index_config string.")
 
     def compute_connection_coefficient(self, index_config, i, k, l):
-        """
+        r"""
         Description
         ===========
         Computes a single connection coefficient.
@@ -1131,7 +1131,7 @@ class SpaceTime:
             print("Invalid index_config string.")
     
     def print_connection_coefficient(self, index_config, i, j, k ):
-        """
+        r"""
         Description
         ===========
         Prints a single connection coefficient.
@@ -1169,7 +1169,7 @@ class SpaceTime:
     
     # Prints all connection coefficients.
     def print_all_connection_coefficients(self, index_config):
-        """
+        r"""
         Description
         ===========
         Prints all connection coefficients for a given index configuration.
@@ -2424,7 +2424,7 @@ class SpaceTime:
     """
 
     def get_stress_energy_coefficient(self, index_config, mu, nu):
-        """
+        r"""
         Description
         ===========
         Returns a stress-energy coefficient for a given associated index pair and index configuration.
@@ -2460,7 +2460,7 @@ class SpaceTime:
             print("Invalid index_config string.")
     
     def set_stress_energy_coefficient(self, index_config, mu, nu, expression):
-        """
+        r"""
         Description
         ===========
         Sets a single stress-energy coefficient from class object.
@@ -2495,7 +2495,7 @@ class SpaceTime:
             print("Invalid index_config string.")
     
     def set_all_stress_energy_coefficients(self, index_config):
-        """
+        r"""
         Description
         ===========
         Sets all stress-energy coefficient values for reuse. Allows for the removal of redundant calculations.
@@ -2546,7 +2546,7 @@ class SpaceTime:
             print("Invalid index_config string.")
     
     def compute_stress_energy_coefficient(self, index_config, mu, nu):
-        """
+        r"""
         Description
         ===========
         Sets all stress-energy coefficient values for reuse. Allows for the removal of redundant calculations.
@@ -2585,7 +2585,7 @@ class SpaceTime:
         return simplify(stress_energy_coefficient)
 
     def print_stress_energy_coefficient(self, index_config, mu, nu):
-        """
+        r"""
         Description
         ===========
         Prints a single stress-energy coefficient.
@@ -2620,7 +2620,7 @@ class SpaceTime:
             print("Invalid index_config string.")
     
     def print_all_stress_energy_coefficients(self, index_config):
-        """
+        r"""
         Description
         ===========
         Prints all stress-energy coefficients.
@@ -2665,7 +2665,7 @@ class SpaceTime:
     ===============================
     """
     def get_cosmological_constant(self):
-        """
+        r"""
         Description
         ===========
         Prints all stress-energy coefficients.
@@ -2698,7 +2698,7 @@ class SpaceTime:
         return self.cosmological_constant  
     
     def set_cosmological_constant(self, expression):
-        """
+        r"""
         Description
         ===========
         Sets cosmological constant from class object.
@@ -2735,7 +2735,7 @@ class SpaceTime:
             self.print_cosmological_constant()
             
     def print_cosmological_constant(self):
-        """
+        r"""
         Description
         ===========
         Sets cosmological constant from class object.
@@ -2886,7 +2886,7 @@ class SpaceTime:
     """
 
     def get_schouten_coefficient(self, index_config, mu, nu):
-        """
+        r"""
         Description
         ===========
         Returns a schouten coefficient for a given associated index pair and index configuration.
@@ -2922,7 +2922,7 @@ class SpaceTime:
             print("Invalid index_config string.")
 
     def set_schouten_coefficient(self, index_config, mu, nu, expression):
-        """
+        r"""
         Description
         ===========
         Sets (computes) a schouten coefficient for a given associated index pair and index configuration.
