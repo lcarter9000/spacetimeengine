@@ -912,10 +912,8 @@ class SpaceTime:
         """
 
         if (index_config == "uu"):
-            print("")
             pprint(Eq(Symbol('g^%s%s' % (mu, nu)), self.get_metric_coefficient(index_config, mu, nu)))
         elif(index_config == "dd"):
-            print("")
             pprint(Eq(Symbol('g_%s%s' % (mu, nu)), self.get_metric_coefficient(index_config, mu, nu)))
         else:
             print("Invalid index_config string.")
@@ -1150,10 +1148,8 @@ class SpaceTime:
         """
 
         if(index_config == "udd"):
-            print("")
             pprint(Eq(Symbol('Gamma^%s_%s%s' % (i, j, k)),self.get_connection_coefficient(index_config, i, j, k )))
         elif(index_config == "ddd"):
-            print("")
             # TODO
             # MUST TEST
             pprint(Eq(Symbol('Gamma_%s%s%s' % (i, j, k)),self.get_connection_coefficient(index_config, i, j, k )))
@@ -1429,10 +1425,8 @@ class SpaceTime:
         """
 
         if index_config == "uddd":
-            print("")
             pprint(Eq(Symbol('R^%s_%s%s%s' % (rho, sig, mu, nu)), self.get_riemann_coefficient(index_config, rho, sig, mu, nu)))
         elif index_config == "dddd":
-            print("")
             pprint(Eq(Symbol('R_%s%s%s%s' % (rho, sig, mu, nu)), self.get_riemann_coefficient(index_config, rho, sig, mu, nu)))
         else:
             print("Invalid index_config string.")
@@ -1720,19 +1714,10 @@ class SpaceTime:
         """
 
         if(index_config == "uddd"):
-            # TODO
-            # MUST TEST
-            print("")
             pprint(Eq(Symbol('C^%s_%s%s%s' % (i, k, l, m)), self.get_weyl_coefficient(index_config, i, k, l, m)))
         elif(index_config == "dduu"):
-            # TODO
-            # MUST TEST
-            print("")
             pprint(Eq(Symbol('C_%s%s^%s%s' % (i, k, l, m)), self.get_weyl_coefficient(index_config, i, k, l, m)))
         elif(index_config == "dddd"):
-            # TODO
-            # MUST TEST
-            print("")
             pprint(Eq(Symbol('C_%s%s%s%s' % (i, k, l, m)), self.get_weyl_coefficient(index_config, i, k, l, m)))
         else:
             print("Invalid index_config string.") 
@@ -1995,10 +1980,8 @@ class SpaceTime:
         """
 
         if (index_config == "uu"):
-            print("")
             pprint(Eq(Symbol('R^%s%s' % (mu, nu)), self.get_ricci_coefficient(index_config, mu, nu)))
         elif(index_config == "dd"):
-            print("")
             pprint(Eq(Symbol('R_%s%s' % (mu, nu)), self.get_ricci_coefficient(index_config, mu, nu)))
         else:
             print("Invalid index_config string.")
@@ -2169,7 +2152,6 @@ class SpaceTime:
         - Needs functionality for other index configurations.
         """
 
-        print("")
         pprint(Eq(Symbol('R'), self.get_ricci_scalar()))
     
     """
@@ -2373,10 +2355,8 @@ class SpaceTime:
         if (index_config == "uu"):
             # TODO
             # MUST TEST
-            print("")
             pprint(Eq(Symbol('G^%s%s' % (mu, nu)), self.get_einstein_coefficient(index_config, mu, nu)))
         elif(index_config == "dd"):
-            print("")
             pprint(Eq(Symbol('G_%s%s' % (mu, nu)), self.get_einstein_coefficient(index_config, mu, nu)))
         else:
             print("Invalid index_config string.")  
@@ -2622,10 +2602,8 @@ class SpaceTime:
         """
 
         if (index_config == "uu"):
-            print("")
             pprint(Eq(Symbol('T^%s%s' % (mu, nu)), self.get_stress_energy_coefficient(index_config, mu, nu)))
         elif(index_config == "dd"):
-            print("")
             pprint(Eq(Symbol('T_%s%s' % (mu, nu)), self.get_stress_energy_coefficient(index_config, mu, nu)))
         else:
             print("Invalid index_config string.")
@@ -2774,7 +2752,6 @@ class SpaceTime:
         - Need higher quality tests.
         - Needs functionality for other index configurations.
         """
-        print("")
         pprint(Eq(Symbol('Lambda'), self.get_cosmological_constant()))
 
 
@@ -2808,7 +2785,6 @@ class SpaceTime:
         return simplify(acceleration)
 
     def print_proper_time_geodesic_acceleration(self, lam):
-        print("")
         pprint(Eq(Derivative(Derivative(self.coordinate_set[lam],Symbol('tau')),Symbol('tau')), self.get_proper_time_geodesic_acceleration(lam)))
 
     def print_all_proper_time_geodesic_accelerations(self):
@@ -2848,7 +2824,6 @@ class SpaceTime:
         #pprint(Eq(Derivative(self.coordinate_set[lam],self.coordinate_set[0]), integrate(acc,Symbol('t'))))
 
     def print_coordinate_time_geodesic_acceleration(self, lam):
-        print("")
         pprint(Eq(Derivative(Derivative(self.coordinate_set[lam],self.coordinate_set[0]),self.coordinate_set[0]), self.get_coordinate_time_geodesic_acceleration(lam)))
 
     def print_all_coordinate_time_geodesic_accelerations(self):
@@ -2888,7 +2863,6 @@ class SpaceTime:
         return simplify(acceleration)
 
     def print_separation_geodesic_acceleration(self, lam):
-        print("")
         pprint(Eq(Derivative(Derivative(Symbol('xi_'+str(lam)),Symbol('tau')),Symbol('tau')), self.get_geodesic_deviation_acceleration(lam)))
 
     def print_all_separation_geodesic_accelerations(self):
@@ -3002,10 +2976,8 @@ class SpaceTime:
 
     def print_schouten_coefficient(self, index_config, mu, nu):
         if (index_config == "uu"):
-            print("")
             pprint(Eq(Symbol('P^%s%s' % (mu, nu)), self.get_schouten_coefficient(index_config, mu, nu)))
         elif(index_config == "dd"):
-            print("")
             pprint(Eq(Symbol('P_%s%s' % (mu, nu)), self.get_schouten_coefficient(index_config, mu, nu)))
         else:
             print("Invalid index_config string.")
