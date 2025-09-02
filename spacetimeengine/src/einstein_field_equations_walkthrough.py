@@ -6,7 +6,7 @@ from sympy.abc import r, theta, phi, t
 from fpdf import FPDF
 
 # Create output directory if it doesn't exist
-os.makedirs("/mnt/data", exist_ok=True)
+os.makedirs("C:/Users/lcart/Documents/GitHub/spacetime-toolkit/mnt/data", exist_ok=True)
 
 # Initialize PDF
 pdf = FPDF()
@@ -93,5 +93,5 @@ G_{mu nu} = 8pi T_{mu nu}
 add_section("Einstein Tensor G_{mu nu}", einstein_tensor_expr)
 
 # Save PDF
-pdf.output("/mnt/data/einstein_field_equations_worksheet.pdf")
+pdf.output("C:/Users/lcart/Documents/GitHub/spacetime-toolkit/mnt/data/einstein_field_equations_worksheet.pdf")
 print("Worksheet generated successfully.")
