@@ -33,11 +33,11 @@ add_section("Introduction", intro)
 metric_expr = """
 The Schwarzschild metric in natural units (G = c = 1) is given by:
 
-ds² = -(1 - 2M/r) dt² + (1 - 2M/r)^(-1) dr² + r² dθ² + r² sin²θ dφ²
+ds^2 = -(1 - 2M/r) dt^2 + (1 - 2M/r)^(-1) dr^2 + r^2 dtheta^2 + r^2 sin^2(theta) dphi^2
 
 In matrix form:
 
-g_{μν} = diag(-(1 - 2M/r), (1 - 2M/r)^(-1), r², r² sin²θ)
+g_{mu nu} = diag(-(1 - 2M/r), (1 - 2M/r)^(-1), r^2, r^2 sin^2(theta))
 """
 add_section("Schwarzschild Metric", metric_expr)
 
@@ -48,49 +48,49 @@ M, r, theta = symbols('M r theta')
 g = diag(-(1 - 2*M/r), 1/(1 - 2*M/r), r**2, r**2*sin(theta)**2)
 g
 """
-add_section("Metric Tensor g_{μν}", "Metric tensor components in Schwarzschild coordinates:\n" + metric_code)
+add_section("Metric Tensor g_{mu nu}", "Metric tensor components in Schwarzschild coordinates:\n" + metric_code)
 
 # Section 4: Christoffel Symbols
 christoffel_expr = """
 The Christoffel symbols are defined as:
-Γ^λ_{μν} = 1/2 g^{λσ} (∂_μ g_{νσ} + ∂_ν g_{μσ} - ∂_σ g_{μν})
+Gamma^lambda_{mu nu} = 1/2 g^{lambda sigma} (partial_mu g_{nu sigma} + partial_nu g_{mu sigma} - partial_sigma g_{mu nu})
 
 They represent the connection coefficients for parallel transport.
 """
-add_section("Christoffel Symbols Γ^λ_{μν}", christoffel_expr)
+add_section("Christoffel Symbols Gamma^lambda_{mu nu}", christoffel_expr)
 
 # Section 5: Riemann Tensor
 riemann_expr = """
 The Riemann curvature tensor is defined as:
-R^ρ_{σμν} = ∂_μ Γ^ρ_{νσ} - ∂_ν Γ^ρ_{μσ} + Γ^ρ_{μλ} Γ^λ_{νσ} - Γ^ρ_{νλ} Γ^λ_{μσ}
+R^rho_{sigma mu nu} = partial_mu Gamma^rho_{nu sigma} - partial_nu Gamma^rho_{mu sigma} + Gamma^rho_{mu lambda} Gamma^lambda_{nu sigma} - Gamma^rho_{nu lambda} Gamma^lambda_{mu sigma}
 
 It encodes the intrinsic curvature of spacetime.
 """
-add_section("Riemann Tensor R^ρ_{σμν}", riemann_expr)
+add_section("Riemann Tensor R^rho_{sigma mu nu}", riemann_expr)
 
 # Section 6: Ricci Tensor
 ricci_expr = """
 The Ricci tensor is obtained by contracting the Riemann tensor:
-R_{μν} = R^λ_{μλν}
+R_{mu nu} = R^lambda_{mu lambda nu}
 """
-add_section("Ricci Tensor R_{μν}", ricci_expr)
+add_section("Ricci Tensor R_{mu nu}", ricci_expr)
 
 # Section 7: Ricci Scalar
 ricci_scalar_expr = """
 The Ricci scalar is the trace of the Ricci tensor:
-R = g^{μν} R_{μν}
+R = g^{mu nu} R_{mu nu}
 """
 add_section("Ricci Scalar R", ricci_scalar_expr)
 
 # Section 8: Einstein Tensor
 einstein_tensor_expr = """
 The Einstein tensor is defined as:
-G_{μν} = R_{μν} - 1/2 g_{μν} R
+G_{mu nu} = R_{mu nu} - 1/2 g_{mu nu} R
 
 It appears on the left-hand side of the Einstein field equations:
-G_{μν} = 8π T_{μν}
+G_{mu nu} = 8pi T_{mu nu}
 """
-add_section("Einstein Tensor G_{μν}", einstein_tensor_expr)
+add_section("Einstein Tensor G_{mu nu}", einstein_tensor_expr)
 
 # Save PDF
 pdf.output("/mnt/data/einstein_field_equations_worksheet.pdf")
