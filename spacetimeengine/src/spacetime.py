@@ -955,17 +955,6 @@ class SpaceTime:
         else:
             print("Invalid index_config string.")
 
-    def print_metric_tensor(self, index_config):
-        """
-        Prints the entire metric tensor as a matrix.
-        """
-        if index_config == "uu":
-            pprint(self.metric_tensor_uu)
-        elif index_config == "dd":
-            pprint(self.metric_tensor_dd)
-        else:
-            print("Invalid index_config string.")
-
     """
     Connection coefficient functions
     ================================
