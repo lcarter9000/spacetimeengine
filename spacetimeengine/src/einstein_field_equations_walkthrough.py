@@ -16,11 +16,11 @@ pdf.set_font("Arial", size=12)
 
 # Helper function to add section
 def add_section(title, content):
-pdf.set_font("Arial", 'B', size=14)
-pdf.cell(200, 10, txt=title, ln=True)
-pdf.set_font("Arial", size=12)
-for line in content.split("\n"):
-pdf.multi_cell(0, 10, line)
+    pdf.set_font("Arial", 'B', size=14)
+    pdf.cell(200, 10, txt=title, ln=True)
+    pdf.set_font("Arial", size=12)
+    for line in content.split("\n"):
+        pdf.multi_cell(0, 10, line)
 
 # Section 1: Introduction
 intro = """
