@@ -2989,10 +2989,11 @@ class SpaceTime:
             for nu in self.dimensions:
                 self.print_schouten_coefficient(index_config, mu, nu)
 
-    def plot_ricci_scalar_grid(self, x_range, y_range, x_index=0, y_index=1, num_points=100):
+    def plot_ricci_scalar_grid(self, x_range, y_range, x_index=0, y_index=1, num_points=100, save_path=None):
         """
         Plots the Ricci scalar over a grid defined by x_range and y_range.
         Assumes coordinate_set[x_index] and coordinate_set[y_index] are the spatial coordinates.
+        If save_path is provided, saves the plot to that location.
         """
         x_vals = np.linspace(x_range[0], x_range[1], num_points)
         y_vals = np.linspace(y_range[0], y_range[1], num_points)
@@ -3012,4 +3013,8 @@ class SpaceTime:
         plt.xlabel(str(x_sym))
         plt.ylabel(str(y_sym))
         plt.title('Spacetime Ricci Scalar Curvature')
-        plt.show()
+        if save_path:
+            plt.savefig(save_path)
+        else:
+            plt.show()
+        plt.close()

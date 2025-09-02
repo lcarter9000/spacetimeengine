@@ -1,28 +1,14 @@
 #!/usr/bin/env python
 from spacetimeengine import *
 
-
 def main():
-    
     # Retrieves a known solution from the Solutions() class.
-    blackhole = Solution().schwarzschild()
-    
-    # The current general model for describing the accellerated expansion of the universe.
-    expanding_universe = Solution().friedmann_lemaitre_robertson_walker()
-    
-    # The most famous wormhole solution.
-    wormhole = Solution().einstein_rosen_bridge()
-    
-    # Empty vacuum.
-    flat_spacetime = Solution().minkowski()
-    
-    # A special case of a more general form of the Friedmann Lemaitre Robertson Walker solution.
-    empty_expanding_universe = Solution().milne()
-    
-    # Gravity as we know it, without the high order effects.
-    newtonian_gravity = Solution().weak_field_approximation()
-    
-    newtonian = SpaceTime(Solution().hypersphere())
+    blackhole_solution = Solution().schwarzschild()
+    blackhole_spacetime = SpaceTime(blackhole_solution)
+
+    # Plot Ricci scalar curvature for Schwarzschild spacetime
+    # Adjust x_range and y_range as needed for your coordinates
+    blackhole_spacetime.plot_ricci_scalar_grid(x_range=(2, 10), y_range=(0, 3.14), x_index=1, y_index=2, num_points=100)
 
 if __name__ == "__main__":
     main()
