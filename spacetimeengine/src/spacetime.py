@@ -2,6 +2,7 @@
 from sympy import *
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 class SpaceTime:
 
@@ -2995,6 +2996,9 @@ class SpaceTime:
         Assumes coordinate_set[x_index] and coordinate_set[y_index] are the spatial coordinates.
         If save_path is provided, saves the plot to that location.
         """
+
+        save_path = "C:/Users/lcart/Documents/GitHub/spacetime-toolkit/mnt/data/images/spacetime_ricci_scalar.png"
+
         x_vals = np.linspace(x_range[0], x_range[1], num_points)
         y_vals = np.linspace(y_range[0], y_range[1], num_points)
         ricci_grid = np.zeros((num_points, num_points))
@@ -3014,6 +3018,8 @@ class SpaceTime:
         plt.ylabel(str(y_sym))
         plt.title('Spacetime Ricci Scalar Curvature')
         if save_path:
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
             plt.savefig(save_path)
         else:
             plt.show()
