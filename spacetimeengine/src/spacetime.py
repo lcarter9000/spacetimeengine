@@ -3024,3 +3024,28 @@ class SpaceTime:
         else:
             plt.show()
         plt.close()
+
+# Example: Add this to your main() function or before exit
+from sympy import pprint
+
+def main():
+    blackhole_solution = Solution().schwarzschild()
+    blackhole_spacetime = SpaceTime(blackhole_solution)
+
+    print("Metric tensor (dd):")
+    pprint(blackhole_spacetime.metric_tensor_dd)
+    print("\nMetric tensor (uu):")
+    pprint(blackhole_spacetime.metric_tensor_uu)
+    print("\nRicci tensor (dd):")
+    pprint(blackhole_spacetime.ricci_tensor_dd)
+    print("\nRicci scalar:")
+    pprint(blackhole_spacetime.ricci_scalar)
+
+    # Your plot call
+    blackhole_spacetime.plot_ricci_scalar_grid(
+        x_range=(2, 10), y_range=(0, 3.14), x_index=1, y_index=2, num_points=100,
+        save_path="mnt/data/ricci_scalar_plot.png"
+    )
+
+if __name__ == "__main__":
+    main()
