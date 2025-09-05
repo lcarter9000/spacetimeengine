@@ -649,7 +649,7 @@ class SpaceTime:
                                         ])
         
         # Declares Ricci curvature tensor class object.
-        self.ricci_scalar = 0
+        self.ricci_scalar = sin(self.coordinate_set[1]) * cos(self.coordinate_set[2])
         
         # Declares the covariant Einstein curvature tensor class object.
         self.einstein_tensor_dd = Matrix([    
