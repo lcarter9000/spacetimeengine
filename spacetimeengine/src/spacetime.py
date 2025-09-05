@@ -3047,7 +3047,7 @@ class SpaceTime:
     def plot_metric_tensor_grid(self, x_range, y_range, mu=1, nu=1, x_index=0, y_index=1, num_points=20, save_path=None):
         """
         Plots the selected metric tensor (dd) component over a grid defined by x_range and y_range.
-        Each cell is shown as an individual square, with a diverging colormap to highlight the metric value.
+        Each cell is shown as an individual square, with a grayscale colormap to highlight the metric value.
         The metric value is printed inside each square.
         """
         if save_path is None:
@@ -3074,11 +3074,15 @@ class SpaceTime:
 
         X, Y = np.meshgrid(x_vals, y_vals)
         plt.figure(figsize=(12, 10))
-        mesh = plt.pcolormesh(X, Y, metric_grid, shading='auto', cmap='seismic', vmin=vmin, vmax=vmax, edgecolors='k', linewidth=0.2)
+        mesh = plt.pcolormesh(
+            X, Y, metric_grid, shading='auto',
+            cmap='gray',  # Use grayscale colormap
+            vmin=vmin, vmax=vmax, edgecolors='k', linewidth=0.2
+        )
         plt.colorbar(mesh, label=f'Metric Tensor g_{{{mu}{nu}}}')
         plt.xlabel(str(x_sym))
         plt.ylabel(str(y_sym))
-        plt.title(f'Spacetime Metric Tensor g_{{{mu}{nu}}} (Grid Squares)\nDiverging Colors Show Value')
+        plt.title(f'Spacetime Metric Tensor g_{{{mu}{nu}}} (Grid Squares)\nGrayscale Shows Value')
 
         # Annotate each cell with its value
         for i in range(num_points):
