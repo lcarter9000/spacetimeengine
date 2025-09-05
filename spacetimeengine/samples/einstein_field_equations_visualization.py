@@ -19,7 +19,10 @@ def main():
     # Plot Ricci scalar curvature for Schwarzschild spacetime
     # Adjust x_range and y_range as needed for your coordinates
     # blackhole_spacetime.plot_ricci_scalar_grid(x_range=(2, 200), y_range=(0, 180), x_index=1, y_index=2, num_points=10)
-
+    
+    # Before plotting, for demonstration:
+    blackhole_spacetime.metric_tensor_dd[1, 1] = sin(blackhole_spacetime.coordinate_set[1]) * cos(blackhole_spacetime.coordinate_set[2])
+    
     # Your plot call
     blackhole_spacetime.plot_metric_tensor_grid(
     x_range=(2, 200), y_range=(0, 180), mu=1, nu=1, x_index=1, y_index=2, num_points=10,
