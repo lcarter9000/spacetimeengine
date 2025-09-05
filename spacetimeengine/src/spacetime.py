@@ -377,7 +377,7 @@ class SpaceTime:
                                                             [ 0, 0, 0, 0 ], 
                                                             [ 0, 0, 0, 0 ], 
                                                             [ 0, 0, 0, 0 ], 
-                                                            [  0, 0, 0, 0 ]
+                                                            [ 0, 0, 0, 0 ]
                                                         ]
                                                    ],
                                                    [    
@@ -3054,6 +3054,47 @@ class SpaceTime:
         plt.xlabel(str(x_sym))
         plt.ylabel(str(y_sym))
         plt.title('Spacetime Ricci Scalar Curvature (Grid Squares)')
+        if save_path:
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            plt.savefig(save_path)
+        else:
+            plt.show()
+        plt.close()
+
+    def plot_ricci_scalar_grid(self, x_range, y_range, x_index=0, y_index=1, num_points=100, save_path=None):
+        """
+        Plots the Ricci scalar over a grid defined by x_range and y_range.
+        Each cell is shown as an individual square, with a diverging colormap to highlight curvature.
+        """
+        if save_path is None:
+            save_path = "mnt/data/spacetime_ricci_scalar_grid.png"
+
+        x_vals = np.linspace(x_range[0], x_range[1], num_points)
+        y_vals = np.linspace(y_range[0], y_range[1], num_points)
+        ricci_grid = np.zeros((num_points, num_points))
+
+        ricci_expr = self.ricci_scalar
+        x_sym = self.coordinate_set[x_index]
+        y_sym = self.coordinate_set[y_index]
+
+        for i, x in enumerate(x_vals):
+            for j, y in enumerate(y_vals):
+                try:
+                    ricci_grid[j, i] = float(ricci_expr.subs({x_sym: x, y_sym: y}))
+                except Exception:
+                    ricci_grid[j, i] = np.nan
+
+        # Set color scale to emphasize curvature
+        abs_max = np.nanmax(np.abs(ricci_grid))
+        vmin, vmax = -abs_max, abs_max
+
+        X, Y = np.meshgrid(x_vals, y_vals)
+        plt.figure(figsize=(10, 8))
+        mesh = plt.pcolormesh(X, Y, ricci_grid, shading='auto', cmap='seismic', vmin=vmin, vmax=vmax, edgecolors='k', linewidth=0.2)
+        plt.colorbar(mesh, label='Ricci Scalar')
+        plt.xlabel(str(x_sym))
+        plt.ylabel(str(y_sym))
+        plt.title('Spacetime Ricci Scalar Curvature (Grid Squares)\nDiverging Colors Show Curvature')
         if save_path:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             plt.savefig(save_path)
