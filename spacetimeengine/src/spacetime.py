@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from sympy import *
+from spacetimeengine.src.solutions import Solution  # Adjust the import path as needed
 import matplotlib.pyplot as plt
 import numpy as np
 import os
