@@ -2990,81 +2990,11 @@ class SpaceTime:
             for nu in self.dimensions:
                 self.print_schouten_coefficient(index_config, mu, nu)
 
-    def plot_ricci_scalar_grid(self, x_range, y_range, x_index=0, y_index=1, num_points=100, save_path=None):
-        """
-        Plots the Ricci scalar over a grid defined by x_range and y_range.
-        Assumes coordinate_set[x_index] and coordinate_set[y_index] are the spatial coordinates.
-        If save_path is provided, saves the plot to that location.
-        """
-
-        # Change the default save_path filename
-        if save_path is None:
-            save_path = "C:/Users/lcart/Documents/GitHub/spacetime-toolkit/mnt/data/images/spacetime_ricci_scalar_grid.png"
-
-        x_vals = np.linspace(x_range[0], x_range[1], num_points)
-        y_vals = np.linspace(y_range[0], y_range[1], num_points)
-        ricci_grid = np.zeros((num_points, num_points))
-
-        # Substitute values into Ricci scalar
-        ricci_expr = self.ricci_scalar
-        x_sym = self.coordinate_set[x_index]
-        y_sym = self.coordinate_set[y_index]
-
-        for i, x in enumerate(x_vals):
-            for j, y in enumerate(y_vals):
-                ricci_grid[j, i] = float(ricci_expr.subs({x_sym: x, y_sym: y}))
-
-        plt.imshow(ricci_grid, extent=(x_range[0], x_range[1], y_range[0], y_range[1]), origin='lower')
-        plt.colorbar(label='Ricci Scalar')
-        plt.xlabel(str(x_sym))
-        plt.ylabel(str(y_sym))
-        plt.title('Spacetime Ricci Scalar Curvature')
-        if save_path:
-            # Ensure directory exists
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            plt.savefig(save_path)
-        else:
-            plt.show()
-        plt.close()
-
-    def plot_ricci_scalar_grid(self, x_range, y_range, x_index=0, y_index=1, num_points=100, save_path=None):
-        """
-        Plots the Ricci scalar over a grid defined by x_range and y_range.
-        Each cell is shown as an individual square.
-        """
-        if save_path is None:
-            save_path = "mnt/data/spacetime_ricci_scalar_grid.png"
-
-        x_vals = np.linspace(x_range[0], x_range[1], num_points)
-        y_vals = np.linspace(y_range[0], y_range[1], num_points)
-        ricci_grid = np.zeros((num_points, num_points))
-
-        ricci_expr = self.ricci_scalar
-        x_sym = self.coordinate_set[x_index]
-        y_sym = self.coordinate_set[y_index]
-
-        for i, x in enumerate(x_vals):
-            for j, y in enumerate(y_vals):
-                ricci_grid[j, i] = float(ricci_expr.subs({x_sym: x, y_sym: y}))
-
-        X, Y = np.meshgrid(x_vals, y_vals)
-        plt.figure(figsize=(8, 6))
-        mesh = plt.pcolormesh(X, Y, ricci_grid, shading='auto', edgecolors='k', linewidth=0.2)
-        plt.colorbar(mesh, label='Ricci Scalar')
-        plt.xlabel(str(x_sym))
-        plt.ylabel(str(y_sym))
-        plt.title('Spacetime Ricci Scalar Curvature (Grid Squares)')
-        if save_path:
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            plt.savefig(save_path)
-        else:
-            plt.show()
-        plt.close()
-
-    def plot_ricci_scalar_grid(self, x_range, y_range, x_index=0, y_index=1, num_points=100, save_path=None):
+    def plot_ricci_scalar_grid(self, x_range, y_range, x_index=0, y_index=1, num_points=20, save_path=None):
         """
         Plots the Ricci scalar over a grid defined by x_range and y_range.
         Each cell is shown as an individual square, with a diverging colormap to highlight curvature.
+        The Ricci scalar value is printed inside each square.
         """
         if save_path is None:
             save_path = "mnt/data/spacetime_ricci_scalar_grid.png"
@@ -3089,12 +3019,23 @@ class SpaceTime:
         vmin, vmax = -abs_max, abs_max
 
         X, Y = np.meshgrid(x_vals, y_vals)
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(12, 10))
         mesh = plt.pcolormesh(X, Y, ricci_grid, shading='auto', cmap='seismic', vmin=vmin, vmax=vmax, edgecolors='k', linewidth=0.2)
         plt.colorbar(mesh, label='Ricci Scalar')
         plt.xlabel(str(x_sym))
         plt.ylabel(str(y_sym))
         plt.title('Spacetime Ricci Scalar Curvature (Grid Squares)\nDiverging Colors Show Curvature')
+
+        # Annotate each cell with its value
+        for i in range(num_points):
+            for j in range(num_points):
+                val = ricci_grid[j, i]
+                if not np.isnan(val):
+                    plt.text(
+                        x_vals[i], y_vals[j], f"{val:.2e}",
+                        ha='center', va='center', fontsize=7, color='black'
+                    )
+
         if save_path:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             plt.savefig(save_path)
