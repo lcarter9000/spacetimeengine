@@ -3076,7 +3076,7 @@ class SpaceTime:
         plt.figure(figsize=(12, 10))
         mesh = plt.pcolormesh(
             X, Y, metric_grid, shading='auto',
-            cmap='gray',  # Use grayscale colormap
+            cmap='Greys_r',  # Use grayscale colormap
             vmin=vmin, vmax=vmax, edgecolors='k', linewidth=0.2
         )
         plt.colorbar(mesh, label=f'Metric Tensor g_{{{mu}{nu}}}')
