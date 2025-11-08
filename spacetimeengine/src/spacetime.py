@@ -3147,12 +3147,22 @@ class SpaceTime:
 
         fig = plt.figure(figsize=(10, 8))
         ax = fig.add_subplot(111, projection='3d')
-        surf = ax.plot_surface(X, Y, Z, facecolors=plt.cm.plasma((curvature - curvature.min()) / (curvature.max() - curvature.min())),
-                               rstride=2, cstride=2, linewidth=0, antialiased=True)
 
-        mappable = plt.cm.ScalarMappable(cmap='plasma')
+        # Use a Normalize so the surface facecolors and colorbar match
+        from matplotlib import cm, colors
+        norm = colors.Normalize(vmin=np.nanmin(curvature), vmax=np.nanmax(curvature))
+        facecolors = cm.plasma(norm(curvature))
+
+        surf = ax.plot_surface(
+            X, Y, Z,
+            facecolors=facecolors,
+            rstride=2, cstride=2, linewidth=0, antialiased=True
+        )
+
+        # Bind the ScalarMappable to this Axes so colorbar can steal space
+        mappable = cm.ScalarMappable(norm=norm, cmap=cm.plasma)
         mappable.set_array(curvature)
-        cbar = fig.colorbar(mappable, shrink=0.65, pad=0.08)
+        cbar = fig.colorbar(mappable, ax=ax, shrink=0.65, pad=0.08)
         cbar.set_label('Radial curvature factor (1 - 2GM/(c^2 r))^-1')
 
         ax.set_title('Schwarzschild Embedding Diagram (Equatorial Slice)')
