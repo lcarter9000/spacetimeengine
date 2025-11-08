@@ -4,6 +4,7 @@ from spacetimeengine.src.solutions import Solution  # Adjust the import path as 
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from mpl_toolkits.mplot3d import Axes3D
 
 class SpaceTime:
 
@@ -3104,6 +3105,66 @@ class SpaceTime:
             plt.show()
         plt.close()
 
+    def plot_schwarzschild_embedding(self, r_range=(2.1, 10), num_r=300, num_phi=180,
+                                     save_path="mnt/data/schwarzschild_embedding.png",
+                                     G_val=1.0, M_val=1.0, c_val=1.0):
+        """
+        Generates a 3D embedding diagram (equatorial slice) for the Schwarzschild spatial geometry.
+        Uses metric: ds^2 = (1 - 2GM/(c^2 r))^-1 dr^2 + r^2 dphi^2 at theta = pi/2, t = const.
+        Embedding condition (Euclidean): dz^2 + dr^2 = (1 - 2GM/(c^2 r))^-1 dr^2 -> dz/dr = sqrt(A - 1),
+        where A = (1 - 2GM/(c^2 r))^-1.
+        """
+        r_min, r_max = r_range
+        G = G_val
+        M = M_val
+        c = c_val
+
+        # Avoid horizon singularity
+        horizon = 2 * G * M / (c ** 2)
+        if r_min <= horizon:
+            r_min = horizon * 1.05
+
+        r = np.linspace(r_min, r_max, num_r)
+        phi = np.linspace(0, 2 * np.pi, num_phi)
+        Phi, R = np.meshgrid(phi, r)
+
+        f = 1.0 - 2.0 * G * M / (c ** 2 * r)
+        A = 1.0 / f
+        dz_dr = np.sqrt(np.clip(A - 1.0, 0.0, None))
+
+        # Numerical integration for z(r)
+        z = np.zeros_like(r)
+        dr = np.diff(r)
+        for i in range(1, len(r)):
+            z[i] = z[i - 1] + 0.5 * (dz_dr[i] + dz_dr[i - 1]) * dr[i - 1]
+
+        Z = np.tile(z, (num_phi, 1)).T
+        X = R * np.cos(Phi)
+        Y = R * np.sin(Phi)
+
+        # Color by radial curvature factor A
+        curvature = np.tile(A, (num_phi, 1)).T
+
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        surf = ax.plot_surface(X, Y, Z, facecolors=plt.cm.plasma((curvature - curvature.min()) / (curvature.max() - curvature.min())),
+                               rstride=2, cstride=2, linewidth=0, antialiased=True)
+
+        mappable = plt.cm.ScalarMappable(cmap='plasma')
+        mappable.set_array(curvature)
+        cbar = fig.colorbar(mappable, shrink=0.65, pad=0.08)
+        cbar.set_label('Radial curvature factor (1 - 2GM/(c^2 r))^-1')
+
+        ax.set_title('Schwarzschild Embedding Diagram (Equatorial Slice)')
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z (Embedded)')
+
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.tight_layout()
+        plt.savefig(save_path, dpi=150)
+        plt.close()
+
 # Example: Add this to your main() function or before exit
 from sympy import pprint
 
@@ -3128,6 +3189,13 @@ def main():
     x_range=(2, 200), y_range=(0, 180), mu=1, nu=1, x_index=1, y_index=2, num_points=10,
     save_path="mnt/data/metric_tensor_plot.png"
 )
+
+    # New: Embedding diagram (curved space visualization)
+    blackhole_spacetime.plot_schwarzschild_embedding(
+        r_range=(2.5, 15), num_r=400, num_phi=240,
+        save_path="mnt/data/schwarzschild_embedding.png",
+        G_val=1.0, M_val=1.0, c_val=1.0
+    )
 
 if __name__ == "__main__":
     main()
