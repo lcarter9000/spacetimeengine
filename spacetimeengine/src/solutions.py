@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from sympy import *
+from sympy import Matrix, symbols, Function
 
 class Solution:
     
@@ -781,3 +782,39 @@ class Solution:
         # An array detailing the solution.
         solution_array = [ metric, coordinate_set, index_config, cosmological_constant ]
         return solution_array
+
+    def flrw_flat(self, Lambda_value=None):
+        """
+        Flat FLRW metric with scale factor a(t) and cosmological constant Λ.
+        ds^2 = -c^2 dt^2 + a(t)^2 (dx^2 + dy^2 + dz^2)
+        Returns (metric_dd, coordinates, index_config, Lambda)
+        """
+        t, x, y, z = symbols('t x y z', real=True)
+        c = symbols('c', positive=True)
+        a = Function('a')(t)
+        Lambda = symbols('Lambda') if Lambda_value is None else Lambda_value
+
+        g_dd = Matrix([
+            [-c**2,      0,       0,       0],
+            [0,      a**2,       0,       0],
+            [0,         0,    a**2,       0],
+            [0,         0,       0,    a**2]
+        ])
+        return (g_dd, (t, x, y, z), "dd", Lambda)
+
+    def de_sitter_static(self, Lambda_value=None):
+        """
+        Static patch de Sitter metric (will yield T_{mn}=0 with current formula).
+        ds^2 = -(1 - Λ r^2 /3) c^2 dt^2 + (1 - Λ r^2 /3)^(-1) dr^2 + r^2(dθ^2 + sin^2θ dφ^2)
+        """
+        t, r, theta, phi = symbols('t r theta phi', real=True)
+        c = symbols('c', positive=True)
+        Lambda = symbols('Lambda') if Lambda_value is None else Lambda_value
+        f = 1 - Lambda * r**2 / 3
+        g_dd = Matrix([
+            [ -c**2 * f,    0,              0,                  0],
+            [ 0,            1/f,            0,                  0],
+            [ 0,            0,              r**2,               0],
+            [ 0,            0,              0,         r**2*symbols('sin')(theta)**2]
+        ])
+        return (g_dd, (t, r, theta, phi), "dd", Lambda)
