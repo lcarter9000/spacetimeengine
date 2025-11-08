@@ -3104,6 +3104,58 @@ class SpaceTime:
             plt.show()
         plt.close()
 
+    def plot_einstein_field_equation_curvature(self, x_range, y_range, mu=0, nu=0, x_index=0, y_index=1, num_points=20, save_path=None):
+        """
+        Plots the Einstein Field Equation curvature T_{mn} over a grid defined by x_range and y_range.
+        Shows the stress-energy tensor as derived from the Einstein tensor.
+        """
+        if save_path is None:
+            save_path = "mnt/data/einstein_field_equation_curvature.png"
+
+        x_vals = np.linspace(x_range[0], x_range[1], num_points)
+        y_vals = np.linspace(y_range[0], y_range[1], num_points)
+        curvature_grid = np.zeros((num_points, num_points))
+
+        # Symbolic variables for substitution
+        x_sym = self.coordinate_set[x_index]
+        y_sym = self.coordinate_set[y_index]
+        t_expr = self.compute_stress_energy_coefficient("dd", mu, nu)
+
+        for i, x in enumerate(x_vals):
+            for j, y in enumerate(y_vals):
+                try:
+                    curvature_grid[j, i] = float(t_expr.subs({x_sym: x, y_sym: y}))
+                except Exception:
+                    curvature_grid[j, i] = np.nan
+
+        abs_max = np.nanmax(np.abs(curvature_grid))
+        vmin, vmax = -abs_max, abs_max
+
+        X, Y = np.meshgrid(x_vals, y_vals)
+        plt.figure(figsize=(12, 10))
+        mesh = plt.pcolormesh(X, Y, curvature_grid, shading='auto', cmap='seismic', vmin=vmin, vmax=vmax, edgecolors='k', linewidth=0.2)
+        plt.colorbar(mesh, label='T_{%d%d} (Stress-Energy Tensor)' % (mu, nu))
+        plt.xlabel(str(x_sym))
+        plt.ylabel(str(y_sym))
+        plt.title('Einstein Field Equation Curvature\n$T_{mn} = \\frac{c^4}{8\\pi G} G_{mn}$')
+
+        # Annotate each cell with its value
+        for i in range(num_points):
+            for j in range(num_points):
+                val = curvature_grid[j, i]
+                if not np.isnan(val):
+                    plt.text(
+                        x_vals[i], y_vals[j], f"{val:.2e}",
+                        ha='center', va='center', fontsize=7, color='black'
+                    )
+
+        if save_path:
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            plt.savefig(save_path)
+        else:
+            plt.show()
+        plt.close()
+
 # Example: Add this to your main() function or before exit
 from sympy import pprint
 
@@ -3128,6 +3180,12 @@ def main():
     x_range=(2, 200), y_range=(0, 180), mu=1, nu=1, x_index=1, y_index=2, num_points=10,
     save_path="mnt/data/metric_tensor_plot.png"
 )
+
+    # Plot Einstein Field Equation curvature for T_{00}
+    blackhole_spacetime.plot_einstein_field_equation_curvature(
+        x_range=(2, 200), y_range=(0, 180), mu=0, nu=0, x_index=1, y_index=2, num_points=10,
+        save_path="mnt/data/einstein_field_equation_curvature.png"
+    )
 
 if __name__ == "__main__":
     main()
