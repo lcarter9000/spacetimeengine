@@ -9,17 +9,18 @@ class SpaceTime:
 
     # Run at object creation.
     def __init__(self, solution, suppress_printing = False):
-            
-        # Initializes coordinate set class object.
+        # Preserve original behavior (solution expected to be an indexable tuple/list)
+        self.solution = solution  # Added so later getattr(self.solution, ...) does not fail.
+        # Physical constants (define if not already provided)
+        self.speed_of_light = symbols('c', positive=True)
+        self.gravitational_constant = symbols('G', positive=True)
+
+        # Existing initialization
         self.coordinate_set = solution[1]
-        # Integer amount of dimensions associated with metric solution.
         self.dimension_count = len(self.coordinate_set)
-        # Simple array for counting through tensor indices.
         self.dimensions = range(len(self.coordinate_set))
-        # Upon a SpaceTime object creation, the user may choose to print the terms as they are computed.
         self.suppress_printing = suppress_printing
-        
-        # Sets the metric tensor and its inverse.
+
         self.metric_index_config = solution[2]
         if (self.metric_index_config == "uu"):
             self.metric_tensor_uu = solution[0]
@@ -29,7 +30,18 @@ class SpaceTime:
             self.metric_tensor_uu = simplify(solution[0].inv())
         else:
             print("Invalid index_config string.")
-        
+
+        # Cosmological constant initialization
+        # Priority: attribute Lambda, attribute cosmological_constant, 4th tuple element, else 0
+        if hasattr(solution, "Lambda"):
+            self.cosmological_constant = getattr(solution, "Lambda")
+        elif hasattr(solution, "cosmological_constant"):
+            self.cosmological_constant = getattr(solution, "cosmological_constant")
+        elif isinstance(solution, (list, tuple)) and len(solution) > 3:
+            self.cosmological_constant = solution[3]
+        else:
+            self.cosmological_constant = 0
+
         # Declares ( gravitational field ) connection class object.
         self.christoffel_symbols_udd = Matrix([
                                                  [
@@ -716,9 +728,6 @@ class SpaceTime:
                                                 [ 0, 0, 0, 0 ]
                                             ])
 
-        # Declares cosmological constant class object.
-        self.cosmological_constant = 0
-        
         # Acceleration vectors.
         self.proper_acceleration = [ 0, 0, 0, 0 ]
         self.coordinate_acceleration = [ 0, 0, 0, 0 ]
@@ -762,7 +771,6 @@ class SpaceTime:
         self.set_all_stress_energy_coefficients("dd")
         #self.set_all_stress_energy_coefficients("uu")
         #self.set_all_stress_energy_coefficients("ud")
-        #self.set_cosmological_constant(solution[3])
         self.set_all_proper_time_geodesic_accelerations()
         self.set_all_coordinate_time_geodesic_accelerations()
         self.set_all_geodesic_deviation_accelerations()
@@ -2461,10 +2469,10 @@ class SpaceTime:
         r"""
         Precomputes all stress-energy coefficients for reuse.
 
+        With Λ:
         T_{mn} = (c^{4} / 8 \pi G) (G_{mn} + Λ g_{mn})
         """
-        # Fallback if solution does not define cosmological constant
-        Lambda = getattr(self.solution, "Lambda", getattr(self.solution, "cosmological_constant", 0))
+        Lambda = getattr(self, "cosmological_constant", 0)  # FIX: use instance value, not self.solution
         c = self.speed_of_light
         Gconst = self.gravitational_constant
         factor = c**4 / (8 * pi * Gconst)
@@ -2488,7 +2496,7 @@ class SpaceTime:
 
         T_{mn} = (c^{4} / 8 \pi G) (G_{mn} + Λ g_{mn})
         """
-        Lambda = getattr(self.solution, "Lambda", getattr(self.solution, "cosmological_constant", 0))
+        Lambda = getattr(self, "cosmological_constant", 0)
         c = self.speed_of_light
         Gconst = self.gravitational_constant
         factor = c**4 / (8 * pi * Gconst)
@@ -2974,8 +2982,7 @@ class SpaceTime:
 
     def plot_einstein_field_equation_curvature(self, x_range, y_range, mu=0, nu=0, x_index=0, y_index=1, num_points=20, save_path=None):
         """
-        Plots the Einstein Field Equation curvature T_{mn} over a grid defined by x_range and y_range.
-        Shows the stress-energy tensor as derived from the Einstein tensor.
+        Plots T_{mn} including Λ term: T_{mn} = (c^4 / 8πG)(G_{mn} + Λ g_{mn})
         """
         if save_path is None:
             save_path = "mnt/data/einstein_field_equation_curvature.png"
@@ -2984,7 +2991,6 @@ class SpaceTime:
         y_vals = np.linspace(y_range[0], y_range[1], num_points)
         curvature_grid = np.zeros((num_points, num_points))
 
-        # Symbolic variables for substitution
         x_sym = self.coordinate_set[x_index]
         y_sym = self.coordinate_set[y_index]
         t_expr = self.compute_stress_energy_coefficient("dd", mu, nu)
@@ -3002,20 +3008,16 @@ class SpaceTime:
         X, Y = np.meshgrid(x_vals, y_vals)
         plt.figure(figsize=(12, 10))
         mesh = plt.pcolormesh(X, Y, curvature_grid, shading='auto', cmap='seismic', vmin=vmin, vmax=vmax, edgecolors='k', linewidth=0.2)
-        plt.colorbar(mesh, label='T_{%d%d} (Stress-Energy Tensor)' % (mu, nu))
+        plt.colorbar(mesh, label=f'T_{{{mu}{nu}}}')
         plt.xlabel(str(x_sym))
         plt.ylabel(str(y_sym))
-        plt.title('Einstein Field Equation Curvature\n$T_{mn} = \\frac{c^4}{8\\pi G} G_{mn}$')
+        plt.title('Einstein Field Equation (with Λ)\n$T_{mn} = (c^{4}/8\\pi G)(G_{mn}+\\Lambda g_{mn})$')
 
-        # Annotate each cell with its value
         for i in range(num_points):
             for j in range(num_points):
                 val = curvature_grid[j, i]
                 if not np.isnan(val):
-                    plt.text(
-                        x_vals[i], y_vals[j], f"{val:.2e}",
-                        ha='center', va='center', fontsize=7, color='black'
-                    )
+                    plt.text(x_vals[i], y_vals[j], f"{val:.2e}", ha='center', va='center', fontsize=7, color='black')
 
         if save_path:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -3028,31 +3030,29 @@ class SpaceTime:
 from sympy import pprint
 
 def main():
-    blackhole_solution = Solution().schwarzschild()
-    blackhole_spacetime = SpaceTime(blackhole_solution)
+    # Use a spacetime with matter/energy (e.g. de Sitter with Λ)
+    # Expect Solution().de_sitter() to return (metric, coordinates, index_config, Lambda)
+    de_sitter_solution = Solution().de_sitter()
+    spacetime_with_lambda = SpaceTime(de_sitter_solution)
 
-    print("Metric tensor (dd):")
-    pprint(blackhole_spacetime.metric_tensor_dd)
-    print("\nMetric tensor (uu):")
-    pprint(blackhole_spacetime.metric_tensor_uu)
-    print("\nRicci tensor (dd):")
-    pprint(blackhole_spacetime.ricci_tensor_dd)
-    print("\nRicci scalar:")
-    pprint(blackhole_spacetime.ricci_scalar)
+    # Ensure cosmological constant is set (if numeric/symbol desired override here)
+    if spacetime_with_lambda.cosmological_constant == 0:
+        spacetime_with_lambda.set_cosmological_constant(symbols('Lambda'))
 
-    # Before plotting, for demonstration:
-    blackhole_spacetime.metric_tensor_dd[1, 1] = sin(blackhole_spacetime.coordinate_set[1]) * cos(blackhole_spacetime.coordinate_set[2])
+    print("Cosmological constant:")
+    pprint(spacetime_with_lambda.get_cosmological_constant())
 
-    # Your plot call
-    blackhole_spacetime.plot_metric_tensor_grid(
-    x_range=(2, 200), y_range=(0, 180), mu=1, nu=1, x_index=1, y_index=2, num_points=10,
-    save_path="mnt/data/metric_tensor_plot.png"
-)
+    print("\nEinstein tensor (dd):")
+    pprint(spacetime_with_lambda.einstein_tensor_dd)
 
-    # Plot Einstein Field Equation curvature for T_{00}
-    blackhole_spacetime.plot_einstein_field_equation_curvature(
-        x_range=(2, 200), y_range=(0, 180), mu=0, nu=0, x_index=1, y_index=2, num_points=10,
-        save_path="mnt/data/einstein_field_equation_curvature.png"
+    print("\nStress-energy tensor (dd) with Λ:")
+    spacetime_with_lambda.set_all_stress_energy_coefficients("dd")
+    pprint(spacetime_with_lambda.stress_energy_tensor_dd)
+
+    # Plot T_{00}
+    spacetime_with_lambda.plot_einstein_field_equation_curvature(
+        x_range=(0, 10), y_range=(0, 10), mu=0, nu=0, x_index=1, y_index=2, num_points=25,
+        save_path="mnt/data/de_sitter_T00.png"
     )
 
 if __name__ == "__main__":
