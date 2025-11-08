@@ -3030,28 +3030,29 @@ class SpaceTime:
 from sympy import pprint
 
 def main():
-    # Use FLRW flat metric (non-zero Einstein tensor with a(t))
-    flrw_solution = Solution().flrw_flat()
-    cosmos = SpaceTime(flrw_solution)
+    # Use a spacetime with matter/energy (e.g. de Sitter with Λ)
+    # Expect Solution().de_sitter() to return (metric, coordinates, index_config, Lambda)
+    de_sitter_solution = Solution().de_sitter()
+    spacetime_with_lambda = SpaceTime(de_sitter_solution)
 
-    # If Lambda not set externally keep symbolic
-    if cosmos.cosmological_constant == 0:
-        cosmos.set_cosmological_constant(symbols('Lambda'))
+    # Ensure cosmological constant is set (if numeric/symbol desired override here)
+    if spacetime_with_lambda.cosmological_constant == 0:
+        spacetime_with_lambda.set_cosmological_constant(symbols('Lambda'))
 
     print("Cosmological constant:")
-    pprint(cosmos.get_cosmological_constant())
+    pprint(spacetime_with_lambda.get_cosmological_constant())
 
     print("\nEinstein tensor (dd):")
-    pprint(cosmos.einstein_tensor_dd)
+    pprint(spacetime_with_lambda.einstein_tensor_dd)
 
     print("\nStress-energy tensor (dd) with Λ:")
-    cosmos.set_all_stress_energy_coefficients("dd")
-    pprint(cosmos.stress_energy_tensor_dd)
+    spacetime_with_lambda.set_all_stress_energy_coefficients("dd")
+    pprint(spacetime_with_lambda.stress_energy_tensor_dd)
 
-    cosmos.plot_einstein_field_equation_curvature(
-        x_range=(0, 1), y_range=(0, 1),
-        mu=0, nu=0, x_index=0, y_index=1, num_points=15,
-        save_path="mnt/data/flrw_T00.png"
+    # Plot T_{00}
+    spacetime_with_lambda.plot_einstein_field_equation_curvature(
+        x_range=(0, 10), y_range=(0, 10), mu=0, nu=0, x_index=1, y_index=2, num_points=25,
+        save_path="mnt/data/de_sitter_T00.png"
     )
 
 if __name__ == "__main__":
