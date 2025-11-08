@@ -2422,232 +2422,100 @@ class SpaceTime:
         ===========
         Returns a stress-energy coefficient for a given associated index pair and index configuration.
 
-        Example
-        =======
-        >> newtonian = SpaceTime(Solution().weak_field_approximation(), True)
-        >> pprint(newtonian.get_stress_energy_coefficient("dd",0,0))
-        0
+        Relation with cosmological constant
+        ===================================
+        Einstein field equations with Λ:
+        G_{mn} + Λ g_{mn} = (8 \pi G / c^{4}) T_{mn}
 
-        LaTeX Representation
-        ====================
-        T_{mn} = frac{c^{4}}{8 \pi G} G_{mn}
+        Therefore:
+        T_{mn} = (c^{4} / 8 \pi G) (G_{mn} + Λ g_{mn})
 
         URL Reference
         =============
         https://en.wikipedia.org/wiki/Stress%E2%80%93energy_tensor
-
-        TODOs
-        =====
-        - Link example with test.
-        - Need higher quality tests.
-        - Needs functionality for other index configurations.
+        https://en.wikipedia.org/wiki/Cosmological_constant
         """
-
-        if (index_config == "uu"):
-            # TODO
-            # MUST TEST
-            return self.stress_energy_tensor_uu[mu, nu]
-        elif(index_config == "dd"):
+        if index_config == "dd":
             return self.stress_energy_tensor_dd[mu, nu]
+        elif index_config == "uu":
+            return self.stress_energy_tensor_uu[mu, nu]
         else:
             print("Invalid index_config string.")
-    
+            return None
+
     def set_stress_energy_coefficient(self, index_config, mu, nu, expression):
         r"""
-        Description
-        ===========
-        Sets a single stress-energy coefficient from class object.
+        Sets a single stress-energy coefficient.
 
-        Example
-        =======
-        >> newtonian = SpaceTime(Solution().weak_field_approximation(), True)
-        >> newtonian.set_stress_energy_coefficient("dd",0,0,0)
-
-        LaTeX Representation
-        ====================
-        T_{mn} = frac{c^{4}}{8 \pi G} G_{mn}
-
-        URL Reference
-        =============
-        https://en.wikipedia.org/wiki/Stress%E2%80%93energy_tensor
-
-        TODOs
-        =====
-        - Link example with test.
-        - Need higher quality tests.
-        - Needs functionality for other index configurations.
+        With Λ:
+        T_{mn} = (c^{4} / 8 \pi G) (G_{mn} + Λ g_{mn})
         """
-
-        if (index_config == "uu"):
-            # TODO
-            # MUST TEST
+        if index_config == "uu":
             self.stress_energy_tensor_uu[mu, nu] = expression
-        elif(index_config == "dd"):
+        elif index_config == "dd":
             self.stress_energy_tensor_dd[mu, nu] = expression
         else:
             print("Invalid index_config string.")
-    
+
     def set_all_stress_energy_coefficients(self, index_config):
         r"""
-        Description
-        ===========
-        Sets all stress-energy coefficient values for reuse. Allows for the removal of redundant calculations.
+        Precomputes all stress-energy coefficients for reuse.
 
-        Example
-        =======
-        >> newtonian = SpaceTime(Solution().weak_field_approximation(), True)
-        >> newtonian.set_all_stress_energy_coefficients("dd")
-
-        LaTeX Representation
-        ====================
-        T_{mn} = frac{c^{4}}{8 \pi G} G_{mn}
-
-        URL Reference
-        =============
-        https://en.wikipedia.org/wiki/Stress%E2%80%93energy_tensor
-
-        TODOs
-        =====
-        - Link example with test.
-        - Need higher quality tests.
-        - Needs functionality for other index configurations.
+        T_{mn} = (c^{4} / 8 \pi G) (G_{mn} + Λ g_{mn})
         """
+        # Fallback if solution does not define cosmological constant
+        Lambda = getattr(self.solution, "Lambda", getattr(self.solution, "cosmological_constant", 0))
+        c = self.speed_of_light
+        Gconst = self.gravitational_constant
+        factor = c**4 / (8 * pi * Gconst)
 
-        if (index_config=="uu"):
-            if(self.suppress_printing == False):
-                print("")
-                print("")
-                print("Stress-energy-momentum tensor coefficients (uu)")
-                print("===============================================")
+        if index_config == "dd":
             for mu in self.dimensions:
                 for nu in self.dimensions:
-                    self.set_stress_energy_coefficient(index_config, mu, nu, self.compute_stress_energy_coefficient(index_config, mu, nu))
-                    if(self.suppress_printing == False):
-                        self.print_stress_energy_coefficient(index_config, mu, nu)
-        elif (index_config == "dd"):
-            if(self.suppress_printing == False):
-                print("")
-                print("")
-                print("Stress-energy-momentum tensor coefficients (dd)")
-                print("===============================================")
+                    expr = factor * (self.einstein_tensor_dd[mu, nu] + Lambda * self.metric_tensor_dd[mu, nu])
+                    self.stress_energy_tensor_dd[mu, nu] = simplify(expr)
+        elif index_config == "uu":
             for mu in self.dimensions:
                 for nu in self.dimensions:
-                    self.set_stress_energy_coefficient(index_config, mu, nu, self.compute_stress_energy_coefficient(index_config, mu, nu))   
-                    if(self.suppress_printing == False):
-                        self.print_stress_energy_coefficient(index_config, mu, nu)
+                    expr = factor * (self.einstein_tensor_uu[mu, nu] + Lambda * self.metric_tensor_uu[mu, nu])
+                    self.stress_energy_tensor_uu[mu, nu] = simplify(expr)
         else:
             print("Invalid index_config string.")
-    
+
     def compute_stress_energy_coefficient(self, index_config, mu, nu):
         r"""
-        Description
-        ===========
-        Sets all stress-energy coefficient values for reuse. Allows for the removal of redundant calculations.
+        Computes (not cached) a single stress-energy coefficient.
 
-        Example
-        =======
-        >> newtonian = SpaceTime(Solution().weak_field_approximation(), True)
-        >> print(newtonian.compute_stress_energy_coefficient("dd",0,0))
-        0
-
-        LaTeX Representation
-        ====================
-        T_{mn} = frac{c^{4}}{8 \pi G} G_{mn}
-
-        URL Reference
-        =============
-        https://en.wikipedia.org/wiki/Stress%E2%80%93energy_tensor
-
-        TODOs
-        =====
-        - Link example with test.
-        - Need higher quality tests.
-        - Needs functionality for other index configurations.
+        T_{mn} = (c^{4} / 8 \pi G) (G_{mn} + Λ g_{mn})
         """
+        Lambda = getattr(self.solution, "Lambda", getattr(self.solution, "cosmological_constant", 0))
+        c = self.speed_of_light
+        Gconst = self.gravitational_constant
+        factor = c**4 / (8 * pi * Gconst)
 
-        stress_energy_coefficient = 0
-        c, G = symbols('c G')
         if index_config == "dd":
-            stress_energy_coefficient = c**4/(8*pi*G)*self.get_einstein_coefficient(index_config, mu, nu) + c**4/(8*pi*G) * self.cosmological_constant * self.metric_tensor_dd[mu,nu]
+            return simplify(factor * (self.compute_einstein_coefficient("dd", mu, nu) + Lambda * self.metric_tensor_dd[mu, nu]))
         elif index_config == "uu":
-            stress_energy_coefficient = c**4/(8*pi*G)*self.get_einstein_coefficient(index_config, mu, nu)
-        elif index_config == "ud" or index_config == "du":
-            pass
+            return simplify(factor * (self.compute_einstein_coefficient("uu", mu, nu) + Lambda * self.metric_tensor_uu[mu, nu]))
         else:
             print("Invalid index_config string.")
-        return simplify(stress_energy_coefficient)
+            return None
 
     def print_stress_energy_coefficient(self, index_config, mu, nu):
         r"""
-        Description
-        ===========
         Prints a single stress-energy coefficient.
 
-        Example
-        =======
-        >> newtonian = SpaceTime(Solution().weak_field_approximation(), True)
-        >> newtonian.print_stress_energy_coefficient("dd",0,0)
-        
-        T₀₀ = 0
-
-        LaTeX Representation
-        ====================
-        T_{mn} = frac{c^{4}}{8 \pi G} G_{mn}
-
-        URL Reference
-        =============
-        https://en.wikipedia.org/wiki/Stress%E2%80%93energy_tensor
-
-        TODOs
-        =====
-        - Link example with test.
-        - Need higher quality tests.
-        - Needs functionality for other index configurations.
+        T_{mn} = (c^{4} / 8 \pi G) (G_{mn} + Λ g_{mn})
         """
+        coeff = self.get_stress_energy_coefficient(index_config, mu, nu)
+        label = f"T{mu}{nu}"
+        print(f"{label} = {coeff}")
 
-        if (index_config == "uu"):
-            pprint(Eq(Symbol('T^%s%s' % (mu, nu)), self.get_stress_energy_coefficient(index_config, mu, nu)))
-        elif(index_config == "dd"):
-            pprint(Eq(Symbol('T_%s%s' % (mu, nu)), self.get_stress_energy_coefficient(index_config, mu, nu)))
-        else:
-            print("Invalid index_config string.")
-    
     def print_all_stress_energy_coefficients(self, index_config):
         r"""
-        Description
-        ===========
-        Prints all stress-energy coefficients.
+        Prints all stress-energy coefficients for the given index configuration.
 
-        Example
-        =======
-        >> newtonian = SpaceTime(Solution().weak_field_approximation(), True)
-        >> newtonian.print_all_stress_energy_coefficients("dd")
-
-        T₀₀ = 0
-
-        T₀₁ = 0
-
-        T₀₂ = 0
-
-        ...
-        
-        T₃₂ = 0
-
-        T₃₃ = 0
-
-        LaTeX Representation
-        ====================
-        T_{mn} = frac{c^{4}}{8 \pi G} G_{mn}
-
-        URL Reference
-        =============
-        https://en.wikipedia.org/wiki/Stress%E2%80%93energy_tensor
-
-        TODOs
-        =====
-        - Link example with test.
-        - Need higher quality tests.
-        - Needs functionality for other index configurations.
+        T_{mn} = (c^{4} / 8 \pi G) (G_{mn} + Λ g_{mn})
         """
         for mu in self.dimensions:
             for nu in self.dimensions:
