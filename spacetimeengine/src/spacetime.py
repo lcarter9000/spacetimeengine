@@ -2519,7 +2519,7 @@ class SpaceTime:
         label = f"T{mu}{nu}"
         print(f"{label} = {coeff}")
 
-    def print_all_stress_energy_coefficient(self, index_config):
+    def print_all_stress_energy_coefficients(self, index_config):
         r"""
         Prints all stress-energy coefficients for the given index configuration.
 
@@ -2990,27 +2990,18 @@ class SpaceTime:
         y_index=1,
         num_points=20,
         save_path=None,
-        # Numeric model and constants
-        scale_factor_model="exp",         # "exp" -> a(t)=a0*exp(H t), "power" -> a(t)=a0*t**n
-        H_value=2.2e-18,                  # s^-1 (H0 ~ 70 km/s/Mpc)
-        a0_value=1.0,
-        c_value=299_792_458.0,            # m/s
-        G_value=6.67430e-11,              # m^3/(kg s^2)
-        Lambda_value=1.1056e-52           # 1/m^2 (Planck 2018)
+        scale_factor_model="exp",   # "exp", "power", or None for symbolic
+        H_value=symbols('H', positive=True),
+        a0_value=1.0
     ):
         """
         Plots T_{mn} including Λ term: T_{mn} = (c^4 / 8πG)(G_{mn} + Λ g_{mn})
 
-        This replaces a(t) and its derivatives with a numeric model and substitutes
-        numeric values for c, G, and Λ to avoid NaNs during evaluation.
+        scale_factor_model:
+            "exp"   -> a(t) = a0 * exp(H t)
+            "power" -> a(t) = a0 * t**n   (use H_value as n)
+            None    -> leave symbolic (may yield NaNs)
         """
-        import numpy as np
-        import matplotlib.pyplot as plt
-        import os
-        from sympy import (
-            Function, Derivative, exp, symbols, simplify, diff
-        )
-
         if save_path is None:
             save_path = "mnt/data/einstein_field_equation_curvature.png"
 
@@ -3018,89 +3009,57 @@ class SpaceTime:
         y_vals = np.linspace(y_range[0], y_range[1], num_points)
         curvature_grid = np.full((num_points, num_points), np.nan, dtype=float)
 
-        # Build symbolic expression for T_{mn}
+        # Coordinates chosen
+        x_sym = self.coordinate_set[x_index]
+        y_sym = self.coordinate_set[y_index]
+
+        # Build expression for T_{mn}
         t_expr = self.compute_stress_energy_coefficient("dd", mu, nu)
 
-        # Time symbol (look for 't' among coordinates)
+        # Optional substitution for scale factor a(t)
+        # Detect a(t) pattern
+        from sympy import Function, exp
         t_symbol = None
         for coord in self.coordinate_set:
-            if getattr(coord, "name", str(coord)) == 't':
+            if coord.name == 't':
                 t_symbol = coord
                 break
 
-        # Substitute a(t) and its derivatives using the selected model
         if t_symbol is not None:
-            a_t = Function('a')(t_symbol)
+            a_func = Function('a')(t_symbol)
             if scale_factor_model == "exp":
-                a_expr = a0_value * exp(H_value * t_symbol)
+                # a(t) = a0 * exp(H t)
+                t_expr = t_expr.subs(a_func, a0_value * exp(H_value * t_symbol))
             elif scale_factor_model == "power":
-                a_expr = a0_value * t_symbol**H_value  # H_value used as exponent n
-            else:
-                a_expr = None
+                # a(t) = a0 * t**n (H_value used as n)
+                t_expr = t_expr.subs(a_func, a0_value * t_symbol**H_value)
 
-            if a_expr is not None:
-                a_subs = {
-                    a_t: a_expr,
-                    Derivative(a_t, t_symbol): diff(a_expr, t_symbol),
-                    Derivative(a_t, (t_symbol, 2)): diff(a_expr, t_symbol, 2),
-                }
-                t_expr = t_expr.subs(a_subs)
-
-        # Substitute numeric physical constants (cover both instance symbols and plain symbols)
-        try:
-            c_sym = self.speed_of_light
-        except Exception:
-            c_sym = symbols('c')
-        try:
-            G_sym = self.gravitational_constant
-        except Exception:
-            G_sym = symbols('G')
-
-        # Prefer instance cosmological constant if available
-        Lambda_sym = None
-        if hasattr(self, "cosmological_constant"):
-            Lambda_sym = self.cosmological_constant
-        else:
-            Lambda_sym = symbols('Lambda')
-
-        const_subs = {
-            c_sym: float(c_value),
-            G_sym: float(G_value),
-            Lambda_sym: float(Lambda_value),
-        }
-        # Also handle bare symbols if they appear
-        const_subs.update({
-            symbols('c'): float(c_value),
-            symbols('G'): float(G_value),
-            symbols('Lambda'): float(Lambda_value),
-        })
-
-        t_expr = simplify(t_expr.subs(const_subs))
-
-        # Prepare numeric evaluator
+        # Attempt lambdify over the variables actually present
         free_syms = list(t_expr.free_symbols)
+        # Keep only symbols in coordinate_set to avoid extraneous (like G, c)
         coord_syms = [sym for sym in self.coordinate_set if sym in free_syms]
+        # If plotting over (x_sym, y_sym) ensure they are included
+        for needed in (x_sym, y_sym):
+            if needed not in coord_syms and needed in free_syms:
+                coord_syms.append(needed)
 
-        use_constant_value = len(coord_syms) == 0
+        # If neither x_sym nor y_sym appear, plotting will be constant
+        use_constant_value = (x_sym not in free_syms and y_sym not in free_syms)
+
         try:
             from sympy import lambdify
-            if use_constant_value:
+            if not use_constant_value:
+                f_numeric = lambdify(coord_syms, t_expr, 'numpy')
+            else:
                 const_val = float(t_expr)
                 f_numeric = None
-            else:
-                f_numeric = lambdify(coord_syms, t_expr, 'numpy')
         except Exception:
-            # Fallback: try float conversion; otherwise NaN
             f_numeric = None
+            use_constant_value = True
             try:
                 const_val = float(t_expr)
-                use_constant_value = True
             except Exception:
                 const_val = np.nan
-                use_constant_value = True
-
-        x_sym = self.coordinate_set[x_index]
-        y_sym = self.coordinate_set[y_index]
 
         for i, xv in enumerate(x_vals):
             for j, yv in enumerate(y_vals):
@@ -3108,7 +3067,7 @@ class SpaceTime:
                     if use_constant_value:
                         curvature_grid[j, i] = const_val
                     else:
-                        # Build args in the order of coord_syms
+                        # Build argument list in order of coord_syms
                         subs_map = {x_sym: xv, y_sym: yv}
                         args = [subs_map.get(sym, 0.0) for sym in coord_syms]
                         val = f_numeric(*args)
@@ -3116,22 +3075,25 @@ class SpaceTime:
                 except Exception:
                     curvature_grid[j, i] = np.nan
 
-        # Handle all-NaN grid gracefully
+        # Handle all-NaN grid
         if np.all(np.isnan(curvature_grid)):
+            # Fallback: just evaluate symbolic at one sample
             curvature_grid[:] = 0.0
             abs_max = 1.0
             warning_text = "All evaluations failed; displaying zeros."
         else:
             abs_max = np.nanmax(np.abs(curvature_grid))
-            if abs_max == 0 or not np.isfinite(abs_max):
-                abs_max = 1.0
             warning_text = None
 
         vmin, vmax = -abs_max, abs_max
         X, Y = np.meshgrid(x_vals, y_vals)
         plt.figure(figsize=(10, 8))
         mesh = plt.pcolormesh(
-            X, Y, curvature_grid, shading='auto', cmap='seismic', vmin=vmin, vmax=vmax
+            X, Y, curvature_grid,
+            shading='auto',
+            cmap='seismic',
+            vmin=vmin,
+            vmax=vmax
         )
         plt.colorbar(mesh, label=f"T_{{{mu}{nu}}}")
         plt.xlabel(str(x_sym))
@@ -3139,11 +3101,19 @@ class SpaceTime:
         plt.title('Einstein Field Equation (with Λ)\n$T_{mn} = (c^{4}/8\\pi G)(G_{mn}+\\Lambda g_{mn})$')
 
         if warning_text:
-            plt.text(0.03, 0.97, warning_text, transform=plt.gca().transAxes,
-                     ha='left', va='top', fontsize=9, color='red')
+            plt.text(
+                0.03, 0.97, warning_text,
+                transform=plt.gca().transAxes,
+                ha='left', va='top',
+                fontsize=9, color='red'
+            )
 
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        plt.savefig(save_path, dpi=150)
+        if save_path:
+            import os
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            plt.savefig(save_path, dpi=150)
+        else:
+            plt.show()
         plt.close()
 
 # Example: Add this to your main() function or before exit
