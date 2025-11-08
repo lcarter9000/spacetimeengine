@@ -2980,48 +2980,138 @@ class SpaceTime:
             plt.show()
         plt.close()
 
-    def plot_einstein_field_equation_curvature(self, x_range, y_range, mu=0, nu=0, x_index=0, y_index=1, num_points=20, save_path=None):
+    def plot_einstein_field_equation_curvature(
+        self,
+        x_range,
+        y_range,
+        mu=0,
+        nu=0,
+        x_index=0,
+        y_index=1,
+        num_points=20,
+        save_path=None,
+        scale_factor_model="exp",   # "exp", "power", or None for symbolic
+        H_value=symbols('H', positive=True),
+        a0_value=1.0
+    ):
         """
         Plots T_{mn} including Λ term: T_{mn} = (c^4 / 8πG)(G_{mn} + Λ g_{mn})
+
+        scale_factor_model:
+            "exp"   -> a(t) = a0 * exp(H t)
+            "power" -> a(t) = a0 * t**n   (use H_value as n)
+            None    -> leave symbolic (may yield NaNs)
         """
         if save_path is None:
             save_path = "mnt/data/einstein_field_equation_curvature.png"
 
         x_vals = np.linspace(x_range[0], x_range[1], num_points)
         y_vals = np.linspace(y_range[0], y_range[1], num_points)
-        curvature_grid = np.zeros((num_points, num_points))
+        curvature_grid = np.full((num_points, num_points), np.nan, dtype=float)
 
+        # Coordinates chosen
         x_sym = self.coordinate_set[x_index]
         y_sym = self.coordinate_set[y_index]
+
+        # Build expression for T_{mn}
         t_expr = self.compute_stress_energy_coefficient("dd", mu, nu)
 
-        for i, x in enumerate(x_vals):
-            for j, y in enumerate(y_vals):
+        # Optional substitution for scale factor a(t)
+        # Detect a(t) pattern
+        from sympy import Function, exp
+        t_symbol = None
+        for coord in self.coordinate_set:
+            if coord.name == 't':
+                t_symbol = coord
+                break
+
+        if t_symbol is not None:
+            a_func = Function('a')(t_symbol)
+            if scale_factor_model == "exp":
+                # a(t) = a0 * exp(H t)
+                t_expr = t_expr.subs(a_func, a0_value * exp(H_value * t_symbol))
+            elif scale_factor_model == "power":
+                # a(t) = a0 * t**n (H_value used as n)
+                t_expr = t_expr.subs(a_func, a0_value * t_symbol**H_value)
+
+        # Attempt lambdify over the variables actually present
+        free_syms = list(t_expr.free_symbols)
+        # Keep only symbols in coordinate_set to avoid extraneous (like G, c)
+        coord_syms = [sym for sym in self.coordinate_set if sym in free_syms]
+        # If plotting over (x_sym, y_sym) ensure they are included
+        for needed in (x_sym, y_sym):
+            if needed not in coord_syms and needed in free_syms:
+                coord_syms.append(needed)
+
+        # If neither x_sym nor y_sym appear, plotting will be constant
+        use_constant_value = (x_sym not in free_syms and y_sym not in free_syms)
+
+        try:
+            from sympy import lambdify
+            if not use_constant_value:
+                f_numeric = lambdify(coord_syms, t_expr, 'numpy')
+            else:
+                const_val = float(t_expr)
+                f_numeric = None
+        except Exception:
+            f_numeric = None
+            use_constant_value = True
+            try:
+                const_val = float(t_expr)
+            except Exception:
+                const_val = np.nan
+
+        for i, xv in enumerate(x_vals):
+            for j, yv in enumerate(y_vals):
                 try:
-                    curvature_grid[j, i] = float(t_expr.subs({x_sym: x, y_sym: y}))
+                    if use_constant_value:
+                        curvature_grid[j, i] = const_val
+                    else:
+                        # Build argument list in order of coord_syms
+                        subs_map = {x_sym: xv, y_sym: yv}
+                        args = [subs_map.get(sym, 0.0) for sym in coord_syms]
+                        val = f_numeric(*args)
+                        curvature_grid[j, i] = float(val)
                 except Exception:
                     curvature_grid[j, i] = np.nan
 
-        abs_max = np.nanmax(np.abs(curvature_grid))
-        vmin, vmax = -abs_max, abs_max
+        # Handle all-NaN grid
+        if np.all(np.isnan(curvature_grid)):
+            # Fallback: just evaluate symbolic at one sample
+            curvature_grid[:] = 0.0
+            abs_max = 1.0
+            warning_text = "All evaluations failed; displaying zeros."
+        else:
+            abs_max = np.nanmax(np.abs(curvature_grid))
+            warning_text = None
 
+        vmin, vmax = -abs_max, abs_max
         X, Y = np.meshgrid(x_vals, y_vals)
-        plt.figure(figsize=(12, 10))
-        mesh = plt.pcolormesh(X, Y, curvature_grid, shading='auto', cmap='seismic', vmin=vmin, vmax=vmax, edgecolors='k', linewidth=0.2)
-        plt.colorbar(mesh, label=f'T_{{{mu}{nu}}}')
+        plt.figure(figsize=(10, 8))
+        mesh = plt.pcolormesh(
+            X, Y, curvature_grid,
+            shading='auto',
+            cmap='seismic',
+            vmin=vmin,
+            vmax=vmax
+        )
+        plt.colorbar(mesh, label=f"T_{{{mu}{nu}}}")
         plt.xlabel(str(x_sym))
         plt.ylabel(str(y_sym))
         plt.title('Einstein Field Equation (with Λ)\n$T_{mn} = (c^{4}/8\\pi G)(G_{mn}+\\Lambda g_{mn})$')
 
-        for i in range(num_points):
-            for j in range(num_points):
-                val = curvature_grid[j, i]
-                if not np.isnan(val):
-                    plt.text(x_vals[i], y_vals[j], f"{val:.2e}", ha='center', va='center', fontsize=7, color='black')
+        if warning_text:
+            plt.text(
+                0.03, 0.97, warning_text,
+                transform=plt.gca().transAxes,
+                ha='left', va='top',
+                fontsize=9, color='red'
+            )
 
         if save_path:
+            import os
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            plt.savefig(save_path)
+            plt.savefig(save_path, dpi=150)
         else:
             plt.show()
         plt.close()
@@ -3030,29 +3120,32 @@ class SpaceTime:
 from sympy import pprint
 
 def main():
-    # Use FLRW flat metric (non-zero Einstein tensor with a(t))
+    # Use flat FLRW with Λ and exponential scale factor
     flrw_solution = Solution().flrw_flat()
     cosmos = SpaceTime(flrw_solution)
 
-    # If Lambda not set externally keep symbolic
+    # Ensure Λ symbolic
     if cosmos.cosmological_constant == 0:
         cosmos.set_cosmological_constant(symbols('Lambda'))
 
-    print("Cosmological constant:")
-    pprint(cosmos.get_cosmological_constant())
-
-    print("\nEinstein tensor (dd):")
-    pprint(cosmos.einstein_tensor_dd)
-
-    print("\nStress-energy tensor (dd) with Λ:")
+    cosmos.set_all_einstein_coefficients("dd")
     cosmos.set_all_stress_energy_coefficients("dd")
-    pprint(cosmos.stress_energy_tensor_dd)
 
+    # Plot T00; x_index=0 -> t, y_index=1 -> x (spatial)
     cosmos.plot_einstein_field_equation_curvature(
-        x_range=(0, 1), y_range=(0, 1),
-        mu=0, nu=0, x_index=0, y_index=1, num_points=15,
+        x_range=(0, 1),
+        y_range=(0, 1),
+        mu=0,
+        nu=0,
+        x_index=0,
+        y_index=1,
+        num_points=30,
+        scale_factor_model="exp",
+        H_value=0.1,
+        a0_value=1.0,
         save_path="mnt/data/flrw_T00.png"
     )
 
 if __name__ == "__main__":
     main()
+`
