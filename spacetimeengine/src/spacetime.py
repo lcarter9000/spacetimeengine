@@ -3098,23 +3098,33 @@ class SpaceTime:
             vmin = -1.0
 
         fig, ax = plt.subplots(figsize=(10, 7), dpi=dpi)
-        # Grayscale colormap
-        mesh = ax.pcolormesh(x_vals, y_vals, comp_grid,
-                             cmap="gray", shading="auto",
-                             vmin=vmin, vmax=vmax)
+
+        # Use a very light grayscale colormap to improve readability
+        import matplotlib as mpl
+        base = mpl.cm.Greys
+        light_gray = mpl.colors.ListedColormap(base(np.linspace(0.75, 1.0, 256)))
+
+        mesh = ax.pcolormesh(
+            x_vals, y_vals, comp_grid,
+            cmap=light_gray, shading="auto",
+            vmin=vmin, vmax=vmax
+        )
         lab = f"g_{mu}{nu}" if index_config == "dd" else f"g^{mu}{nu}"
         ax.set_xlabel(str(x_sym))
         ax.set_ylabel(str(y_sym))
-        ax.set_title(f"Metric Component {lab} (Grayscale)")
+        ax.set_title(f"Metric Component {lab} (Light Grayscale)")
 
         for i, xv in enumerate(x_vals[:-1]):
             for j, yv in enumerate(y_vals[:-1]):
                 val = comp_grid[j, i]
                 if np.isfinite(val):
-                    ax.text(xv + (x_vals[1]-x_vals[0])/2.0,
-                            yv + (y_vals[1]-y_vals[0])/2.0,
-                            f"{val:0.2e}",
-                            ha="center", va="center", fontsize=7, color="black")
+                    ax.text(
+                        xv + (x_vals[1] - x_vals[0]) / 2.0,
+                        yv + (y_vals[1] - y_vals[0]) / 2.0,
+                        f"{val:0.2e}",
+                        ha="center", va="center", fontsize=7, color="black",
+                        bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.65)
+                    )
 
         for xv in x_vals:
             ax.axvline(xv, color="black", linewidth=0.4)
