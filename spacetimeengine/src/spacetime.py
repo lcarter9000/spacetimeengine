@@ -3260,7 +3260,7 @@ def main():
     st.plot_ricci_scalar_grid(x_range=(0, 200), y_range=(0, 200), x_index=1, y_index=2, num_points=10)
     st.plot_metric_tensor_grid(x_range=(0, 200), y_range=(0, 200), mu=0, nu=0, x_index=1, y_index=2, num_points=10)
 
-sys.settrace(trace_calls)
+sys.settrace(trace_calls) # Start tracing function calls
 
 if __name__ == "__main__":
     main()
