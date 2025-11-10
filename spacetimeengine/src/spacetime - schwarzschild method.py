@@ -6,15 +6,6 @@ import numpy as np
 import os
 from mpl_toolkits.mplot3d import Axes3D
 
-try:
-    from .src.spacetime import SpaceTime
-except ModuleNotFoundError as e:
-    raise ImportError("Expected spacetimeengine/src/spacetime.py. Rename the file from 'spacetime - schwarzschild method.py'.") from e
-
-from .src.solutions import Solution
-
-__all__ = ["SpaceTime", "Solution"]
-
 class SpaceTime:
 
     # Run at object creation.
