@@ -2992,118 +2992,141 @@ class SpaceTime:
             for nu in self.dimensions:
                 self.print_schouten_coefficient(index_config, mu, nu)
 
-    def plot_ricci_scalar_grid(self, x_range, y_range, x_index=0, y_index=1, num_points=20, save_path=None):
+    def plot_ricci_scalar_grid(self, x_range, y_range, x_index=0, y_index=1,
+                               num_points=20, save_path=None, dpi=150):
         """
-        Plots the Ricci scalar over a grid defined by x_range and y_range.
-        Each cell is shown as an individual square, with a diverging colormap to highlight curvature.
-        The Ricci scalar value is printed inside each square.
+        Generate a PNG showing Ricci scalar sampled on a 2D grid with each cell
+        annotated. x_index,y_index select coordinate symbols from self.coordinate_set.
         """
         if save_path is None:
-            save_path = "mnt/data/spacetime_ricci_scalar_grid.png"
+            save_path = os.path.join(os.getcwd(), "ricci_scalar_grid.png")
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-        x_vals = np.linspace(x_range[0], x_range[1], num_points)
-        y_vals = np.linspace(y_range[0], y_range[1], num_points)
-        ricci_grid = np.zeros((num_points, num_points))
-
-        ricci_expr = self.ricci_scalar
         x_sym = self.coordinate_set[x_index]
         y_sym = self.coordinate_set[y_index]
 
-        for i, x in enumerate(x_vals):
-            for j, y in enumerate(y_vals):
+        # Numeric function (falls back to constant if expression independent)
+        ricci_expr = self.get_ricci_scalar()
+        f_ricci = lambdify((x_sym, y_sym), ricci_expr, "numpy")
+
+        x_vals = np.linspace(x_range[0], x_range[1], num_points)
+        y_vals = np.linspace(y_range[0], y_range[1], num_points)
+        ricci_grid = np.zeros((num_points, num_points), dtype=float)
+
+        for i, xv in enumerate(x_vals):
+            for j, yv in enumerate(y_vals):
                 try:
-                    ricci_grid[j, i] = float(ricci_expr.subs({x_sym: x, y_sym: y}))
+                    ricci_grid[j, i] = float(f_ricci(xv, yv))
                 except Exception:
                     ricci_grid[j, i] = np.nan
 
-        # Set color scale to emphasize curvature
-        abs_max = np.nanmax(np.abs(ricci_grid))
-        vmin, vmax = -abs_max, abs_max
+        vmax = np.nanmax(np.abs(ricci_grid))
+        if not np.isfinite(vmax) or vmax == 0:
+            vmax = 1.0
+        vmin = -vmax
 
-        X, Y = np.meshgrid(x_vals, y_vals)
-        plt.figure(figsize=(12, 10))
-        mesh = plt.pcolormesh(X, Y, ricci_grid, shading='auto', cmap='seismic', vmin=vmin, vmax=vmax, edgecolors='k', linewidth=0.2)
-        plt.colorbar(mesh, label='Ricci Scalar')
-        plt.xlabel(str(x_sym))
-        plt.ylabel(str(y_sym))
-        plt.title('Spacetime Ricci Scalar Curvature (Grid Squares)\nDiverging Colors Show Curvature')
+        fig, ax = plt.subplots(figsize=(10, 7), dpi=dpi)
+        mesh = ax.pcolormesh(x_vals, y_vals, ricci_grid,
+                             cmap="seismic", shading="auto",
+                             vmin=vmin, vmax=vmax)
+        ax.set_xlabel(str(x_sym))
+        ax.set_ylabel(str(y_sym))
+        ax.set_title("Spacetime Ricci Scalar Curvature (Grid Squares)\nDiverging Colors Show Curvature")
 
-        # Annotate each cell with its value
-        for i in range(num_points):
-            for j in range(num_points):
+        # Annotate each cell
+        for i, xv in enumerate(x_vals[:-1]):
+            for j, yv in enumerate(y_vals[:-1]):
                 val = ricci_grid[j, i]
-                if not np.isnan(val):
-                    plt.text(
-                        x_vals[i], y_vals[j], f"{val:.2e}",
-                        ha='center', va='center', fontsize=7, color='black'
-                    )
+                if np.isfinite(val):
+                    ax.text(xv + (x_vals[1]-x_vals[0])/2.0,
+                            yv + (y_vals[1]-y_vals[0])/2.0,
+                            f"{val:0.2e}",
+                            ha="center", va="center", fontsize=7, color="black")
 
-        if save_path:
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            plt.savefig(save_path)
-        else:
-            plt.show()
-        plt.close()
+        # Draw grid lines
+        for xv in x_vals:
+            ax.axvline(xv, color="black", linewidth=0.5)
+        for yv in y_vals:
+            ax.axhline(yv, color="black", linewidth=0.5)
 
-    def plot_metric_tensor_grid(self, x_range, y_range, mu=1, nu=1, x_index=0, y_index=1, num_points=20, save_path=None):
+        cbar = fig.colorbar(mesh, ax=ax)
+        cbar.set_label("Ricci Scalar")
+
+        fig.tight_layout()
+        fig.savefig(save_path)
+        plt.close(fig)
+        return save_path
+
+    def plot_metric_tensor_grid(self, x_range, y_range, mu=0, nu=0,
+                                x_index=0, y_index=1, num_points=20,
+                                save_path=None, dpi=150, index_config="dd"):
         """
-        Plots the selected metric tensor (dd) component over a grid defined by x_range and y_range.
-        Each cell is shown as an individual square, with a very light grayscale colormap to highlight the metric value.
-        The metric value is printed inside each square.
+        Plot selected metric component g_{mu nu} (or g^{mu nu} if index_config='uu')
+        over a grid of two coordinates.
         """
         if save_path is None:
-            save_path = "mnt/data/spacetime_metric_tensor_grid.png"
+            fname = f"metric_{index_config}_{mu}{nu}_grid.png"
+            save_path = os.path.join(os.getcwd(), fname)
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-        x_vals = np.linspace(x_range[0], x_range[1], num_points)
-        y_vals = np.linspace(y_range[0], y_range[1], num_points)
-        metric_grid = np.zeros((num_points, num_points))
-
-        metric_expr = self.metric_tensor_dd[mu, nu]
         x_sym = self.coordinate_set[x_index]
         y_sym = self.coordinate_set[y_index]
 
-        for i, x in enumerate(x_vals):
-            for j, y in enumerate(y_vals):
-                try:
-                    metric_grid[j, i] = float(metric_expr.subs({x_sym: x, y_sym: y}))
-                except Exception:
-                    metric_grid[j, i] = np.nan
-
-        # Set color scale to emphasize variation, but use a very light grayscale
-        abs_max = np.nanmax(np.abs(metric_grid))
-        vmin, vmax = -abs_max, abs_max
-
-        X, Y = np.meshgrid(x_vals, y_vals)
-        plt.figure(figsize=(12, 10))
-        # Use Greys_r and restrict the color range to the top 30% (very light)
-        from matplotlib import cm, colors
-        light_greys = colors.ListedColormap(cm.Greys_r(np.linspace(0.7, 1.0, 256)))
-        mesh = plt.pcolormesh(
-            X, Y, metric_grid, shading='auto',
-            cmap=light_greys,
-            vmin=vmin, vmax=vmax, edgecolors='k', linewidth=0.2
-        )
-        plt.colorbar(mesh, label=f'Metric Tensor g_{{{mu}{nu}}}')
-        plt.xlabel(str(x_sym))
-        plt.ylabel(str(y_sym))
-        plt.title(f'Spacetime Metric Tensor g_{{{mu}{nu}}} (Grid Squares)\nVery Light Grayscale Shows Value')
-
-        # Annotate each cell with its value
-        for i in range(num_points):
-            for j in range(num_points):
-                val = metric_grid[j, i]
-                if not np.isnan(val):
-                    plt.text(
-                        x_vals[i], y_vals[j], f"{val:.2e}",
-                        ha='center', va='center', fontsize=7, color='black'
-                    )
-
-        if save_path:
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            plt.savefig(save_path)
+        if index_config == "dd":
+            comp_expr = self.metric_tensor_dd[mu, nu]
+        elif index_config == "uu":
+            comp_expr = self.metric_tensor_uu[mu, nu]
         else:
-            plt.show()
-        plt.close()
+            raise ValueError("index_config must be 'dd' or 'uu'.")
+
+        f_comp = lambdify((x_sym, y_sym), comp_expr, "numpy")
+
+        x_vals = np.linspace(x_range[0], x_range[1], num_points)
+        y_vals = np.linspace(y_range[0], y_range[1], num_points)
+        comp_grid = np.zeros((num_points, num_points), dtype=float)
+
+        for i, xv in enumerate(x_vals):
+            for j, yv in enumerate(y_vals):
+                try:
+                    comp_grid[j, i] = float(f_comp(xv, yv))
+                except Exception:
+                    comp_grid[j, i] = np.nan
+
+        vmax = np.nanmax(np.abs(comp_grid))
+        if not np.isfinite(vmax) or vmax == 0:
+            vmax = 1.0
+        vmin = -vmax
+
+        fig, ax = plt.subplots(figsize=(10, 7), dpi=dpi)
+        mesh = ax.pcolormesh(x_vals, y_vals, comp_grid,
+                             cmap="seismic", shading="auto",
+                             vmin=vmin, vmax=vmax)
+        lab = f"g_{mu}{nu}" if index_config == "dd" else f"g^{mu}{nu}"
+        ax.set_xlabel(str(x_sym))
+        ax.set_ylabel(str(y_sym))
+        ax.set_title(f"Metric Component {lab} (Grid Squares)")
+
+        for i, xv in enumerate(x_vals[:-1]):
+            for j, yv in enumerate(y_vals[:-1]):
+                val = comp_grid[j, i]
+                if np.isfinite(val):
+                    ax.text(xv + (x_vals[1]-x_vals[0])/2.0,
+                            yv + (y_vals[1]-y_vals[0])/2.0,
+                            f"{val:0.2e}",
+                            ha="center", va="center", fontsize=7, color="black")
+
+        for xv in x_vals:
+            ax.axvline(xv, color="black", linewidth=0.5)
+        for yv in y_vals:
+            ax.axhline(yv, color="black", linewidth=0.5)
+
+        cbar = fig.colorbar(mesh, ax=ax)
+        cbar.set_label(lab)
+
+        fig.tight_layout()
+        fig.savefig(save_path)
+        plt.close(fig)
+        return save_path
 
     def plot_schwarzschild_embedding(self, r_range=(2.1, 10), num_r=300, num_phi=180,
                                      save_path="mnt/data/schwarzschild_embedding.png",
@@ -3206,6 +3229,11 @@ def main():
         save_path="mnt/data/schwarzschild_embedding.png",
         G_val=1.0, M_val=1.0, c_val=1.0
     )
+
+    # Example usage (adjust Solution / indices as needed)
+    st = SpaceTime(Solution().weak_field_approximation(), suppress_printing=True)
+    st.plot_ricci_scalar_grid(x_range=(0, 200), y_range=(0, 200), x_index=1, y_index=2, num_points=10)
+    st.plot_metric_tensor_grid(x_range=(0, 200), y_range=(0, 200), mu=0, nu=0, x_index=1, y_index=2, num_points=10)
 
 if __name__ == "__main__":
     main()
