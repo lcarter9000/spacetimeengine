@@ -6,6 +6,20 @@ import numpy as np
 import os
 from mpl_toolkits.mplot3d import Axes3D
 
+import sys
+import pdb
+
+def trace_calls(frame, event, arg):
+    if event == 'call':
+        code = frame.f_code
+        func_name = code.co_name
+        filename = code.co_filename
+        lineno = frame.f_lineno
+        print(f"\n🔍 Pausing at function: {func_name} ({filename}:{lineno})")
+        pdb.set_trace()  # Pause execution here
+    return trace_calls  # Continue tracing deeper calls
+
+
 class SpaceTime:
 
     # Run at object creation.
@@ -3246,5 +3260,10 @@ def main():
     st.plot_ricci_scalar_grid(x_range=(0, 200), y_range=(0, 200), x_index=1, y_index=2, num_points=10)
     st.plot_metric_tensor_grid(x_range=(0, 200), y_range=(0, 200), mu=0, nu=0, x_index=1, y_index=2, num_points=10)
 
+sys.settrace(trace_calls)
+
 if __name__ == "__main__":
     main()
+
+sys.settrace(None)  # Stop tracing after main
+
