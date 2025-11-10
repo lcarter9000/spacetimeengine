@@ -3061,12 +3061,11 @@ class SpaceTime:
                                 x_index=0, y_index=1, num_points=20,
                                 save_path=None, dpi=150, index_config="dd"):
         """
-        Plot selected metric component g_{mu nu} (or g^{mu nu} if index_config='uu')
-        over a grid of two coordinates.
+        Plot selected metric component in grayscale and save as metric_tensor_plot.png
+        (unless a custom save_path is provided).
         """
         if save_path is None:
-            fname = f"metric_{index_config}_{mu}{nu}_grid.png"
-            save_path = os.path.join(os.getcwd(), fname)
+            save_path = os.path.join(os.getcwd(), "metric_tensor_plot.png")
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
         x_sym = self.coordinate_set[x_index]
@@ -3092,19 +3091,21 @@ class SpaceTime:
                 except Exception:
                     comp_grid[j, i] = np.nan
 
-        vmax = np.nanmax(np.abs(comp_grid))
-        if not np.isfinite(vmax) or vmax == 0:
+        vmax = np.nanmax(comp_grid)
+        vmin = np.nanmin(comp_grid)
+        if not np.isfinite(vmax) or not np.isfinite(vmin) or vmax == vmin:
             vmax = 1.0
-        vmin = -vmax
+            vmin = -1.0
 
         fig, ax = plt.subplots(figsize=(10, 7), dpi=dpi)
+        # Grayscale colormap
         mesh = ax.pcolormesh(x_vals, y_vals, comp_grid,
-                             cmap="seismic", shading="auto",
+                             cmap="gray", shading="auto",
                              vmin=vmin, vmax=vmax)
         lab = f"g_{mu}{nu}" if index_config == "dd" else f"g^{mu}{nu}"
         ax.set_xlabel(str(x_sym))
         ax.set_ylabel(str(y_sym))
-        ax.set_title(f"Metric Component {lab} (Grid Squares)")
+        ax.set_title(f"Metric Component {lab} (Grayscale)")
 
         for i, xv in enumerate(x_vals[:-1]):
             for j, yv in enumerate(y_vals[:-1]):
@@ -3116,9 +3117,9 @@ class SpaceTime:
                             ha="center", va="center", fontsize=7, color="black")
 
         for xv in x_vals:
-            ax.axvline(xv, color="black", linewidth=0.5)
+            ax.axvline(xv, color="black", linewidth=0.4)
         for yv in y_vals:
-            ax.axhline(yv, color="black", linewidth=0.5)
+            ax.axhline(yv, color="black", linewidth=0.4)
 
         cbar = fig.colorbar(mesh, ax=ax)
         cbar.set_label(lab)
