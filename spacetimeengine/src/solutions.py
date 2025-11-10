@@ -166,7 +166,6 @@ class Solution:
         Examples
         ========
         >>> print(Solution().schwarzschild())
-        >>> 
         LaTeX representation
         ====================
         """
