@@ -3122,45 +3122,59 @@ class SpaceTime:
                 except Exception:
                     comp_grid[j, i] = np.nan
 
-        vmax = np.nanmax(comp_grid)
-        vmin = np.nanmin(comp_grid)
-        if not np.isfinite(vmax) or not np.isfinite(vmin) or vmax == vmin:
+        # Robust symmetric limits (avoid All-NaN warnings and low contrast)
+        finite_vals = comp_grid[np.isfinite(comp_grid)]
+        if finite_vals.size == 0:
             vmax = 1.0
-            vmin = -1.0
+        else:
+            vmax = float(np.nanpercentile(np.abs(finite_vals), 98))
+            if vmax == 0.0 or not np.isfinite(vmax):
+                vmax = 1.0
+        vmin = -vmax
 
-        fig, ax = plt.subplots(figsize=(10, 7), dpi=dpi)
+        fig, ax = plt.subplots(figsize=(11, 8), dpi=dpi)
 
-        # Use a very light grayscale colormap to improve readability
+        # Light grayscale, centered at 0 for better contrast
         import matplotlib as mpl
-        base = mpl.cm.Greys
-        light_gray = mpl.colors.ListedColormap(base(np.linspace(0.75, 1.0, 256)))
+        from matplotlib import colors, patheffects as pe
+
+        def _truncate_cmap(cmap, minval=0.78, maxval=1.0, n=256):
+            return mpl.colors.ListedColormap(cmap(np.linspace(minval, maxval, n)))
+
+        cmap = _truncate_cmap(mpl.cm.Greys, 0.78, 1.0)
+        norm = colors.TwoSlopeNorm(vmin=vmin, vcenter=0.0, vmax=vmax)
 
         mesh = ax.pcolormesh(
             x_vals, y_vals, comp_grid,
-            cmap=light_gray, shading="auto",
-            vmin=vmin, vmax=vmax
+            cmap=cmap, norm=norm, shading="auto"
         )
         lab = f"g_{mu}{nu}" if index_config == "dd" else f"g^{mu}{nu}"
         ax.set_xlabel(str(x_sym))
         ax.set_ylabel(str(y_sym))
-        ax.set_title(f"Metric Component {lab} (Light Grayscale)")
+        ax.set_title(f"Metric Component {lab} (Readable Grayscale)")
 
+        # Annotate with adaptive color and outline for readability
+        dx = (x_vals[1] - x_vals[0]) / 2.0 if len(x_vals) > 1 else 0.0
+        dy = (y_vals[1] - y_vals[0]) / 2.0 if len(y_vals) > 1 else 0.0
         for i, xv in enumerate(x_vals[:-1]):
             for j, yv in enumerate(y_vals[:-1]):
                 val = comp_grid[j, i]
                 if np.isfinite(val):
+                    rgba = cmap(norm(val))
+                    lum = 0.2126 * rgba[0] + 0.7152 * rgba[1] + 0.0722 * rgba[2]
+                    txt_color = "black" if lum > 0.6 else "white"
+                    outline = "white" if txt_color == "black" else "black"
                     ax.text(
-                        xv + (x_vals[1] - x_vals[0]) / 2.0,
-                        yv + (y_vals[1] - y_vals[0]) / 2.0,
-                        f"{val:0.2e}",
-                        ha="center", va="center", fontsize=7, color="black",
-                        bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.65)
+                        xv + dx, yv + dy, f"{val:0.2e}",
+                        ha="center", va="center", fontsize=9, color=txt_color,
+                        path_effects=[pe.withStroke(linewidth=1.5, foreground=outline)]
                     )
 
+        # Light gridlines
         for xv in x_vals:
-            ax.axvline(xv, color="black", linewidth=0.4)
+            ax.axvline(xv, color="0.85", linewidth=0.5)
         for yv in y_vals:
-            ax.axhline(yv, color="black", linewidth=0.4)
+            ax.axhline(yv, color="0.85", linewidth=0.5)
 
         cbar = fig.colorbar(mesh, ax=ax)
         cbar.set_label(lab)
