@@ -9,6 +9,23 @@ from mpl_toolkits.mplot3d import Axes3D
 import sys
 import pdb
 
+"""
+# ┌────────┬────────────────────────────────────────────────────────────┐
+# │ Command│ Description                                                │
+# ├────────┼────────────────────────────────────────────────────────────┤
+# │ c      │ Continue execution until next breakpoint or trace call     │
+# │ n      │ Step to the next line in the current function              │
+# │ s      │ Step into the next function call                           │
+# │ r      │ Continue until the current function returns                │
+# │ q      │ Quit the debugger and stop execution                       │
+# │ l      │ List source code around the current line                   │
+# │ p var  │ Print the value of variable `var`                          │
+# │ b line │ Set breakpoint at line number `line`                       │
+# │ b func │ Set breakpoint at function `func`                          │
+# │ cl     │ Clear all breakpoints                                      │
+# │ h      │ Show help on commands                                      │
+# └────────┴────────────────────────────────────────────────────────────┘
+"""
 def trace_calls(frame, event, arg):
     if event == 'call':
         code = frame.f_code
