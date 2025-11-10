@@ -626,7 +626,7 @@ class SpaceTime:
                                                             [ 0, 0, 0, 0 ], 
                                                             [ 0, 0, 0, 0 ], 
                                                             [ 0, 0, 0, 0 ], 
-                                                            [ 0, 0, 0, 0 ]
+                                                            [  0, 0, 0, 0 ]
                                                         ]
                                                    ],
                                                    [    
@@ -3092,8 +3092,8 @@ class SpaceTime:
                                 x_index=0, y_index=1, num_points=20,
                                 save_path=None, dpi=150, index_config="dd"):
         """
-        Plot selected metric component in grayscale and save as metric_tensor_plot.png
-        (unless a custom save_path is provided).
+        Plot selected metric component as a plain grid with numeric values only
+        (no grayscale background) and save as metric_tensor_plot.png unless overridden.
         """
         if save_path is None:
             save_path = os.path.join(os.getcwd(), "metric_tensor_plot.png")
@@ -3122,62 +3122,48 @@ class SpaceTime:
                 except Exception:
                     comp_grid[j, i] = np.nan
 
-        # Robust symmetric limits (avoid All-NaN warnings and low contrast)
-        finite_vals = comp_grid[np.isfinite(comp_grid)]
-        if finite_vals.size == 0:
-            vmax = 1.0
-        else:
-            vmax = float(np.nanpercentile(np.abs(finite_vals), 98))
-            if vmax == 0.0 or not np.isfinite(vmax):
-                vmax = 1.0
-        vmin = -vmax
-
         fig, ax = plt.subplots(figsize=(11, 8), dpi=dpi)
-
-        # Light grayscale, centered at 0 for better contrast
-        import matplotlib as mpl
-        from matplotlib import colors, patheffects as pe
-
-        def _truncate_cmap(cmap, minval=0.78, maxval=1.0, n=256):
-            return mpl.colors.ListedColormap(cmap(np.linspace(minval, maxval, n)))
-
-        cmap = _truncate_cmap(mpl.cm.Greys, 0.78, 1.0)
-        norm = colors.TwoSlopeNorm(vmin=vmin, vcenter=0.0, vmax=vmax)
-
-        mesh = ax.pcolormesh(
-            x_vals, y_vals, comp_grid,
-            cmap=cmap, norm=norm, shading="auto"
-        )
         lab = f"g_{mu}{nu}" if index_config == "dd" else f"g^{mu}{nu}"
         ax.set_xlabel(str(x_sym))
         ax.set_ylabel(str(y_sym))
-        ax.set_title(f"Metric Component {lab} (Readable Grayscale)")
+        ax.set_title(f"Metric Component {lab} (Values Only)")
 
-        # Annotate with adaptive color and outline for readability
-        dx = (x_vals[1] - x_vals[0]) / 2.0 if len(x_vals) > 1 else 0.0
-        dy = (y_vals[1] - y_vals[0]) / 2.0 if len(y_vals) > 1 else 0.0
+        # Draw plain grid boxes (no fill)
+        from matplotlib.patches import Rectangle
+        if len(x_vals) > 1 and len(y_vals) > 1:
+            dx = x_vals[1] - x_vals[0]
+            dy = y_vals[1] - y_vals[0]
+        else:
+            dx = dy = 1.0
+
+        for i, xv in enumerate(x_vals[:-1]):
+            for j, yv in enumerate(y_vals[:-1]):
+                ax.add_patch(
+                    Rectangle((xv, yv), dx, dy, fill=False,
+                              edgecolor="black", linewidth=0.6)
+                )
+
+        # Annotate each cell center
+        cx = dx / 2.0
+        cy = dy / 2.0
         for i, xv in enumerate(x_vals[:-1]):
             for j, yv in enumerate(y_vals[:-1]):
                 val = comp_grid[j, i]
                 if np.isfinite(val):
-                    rgba = cmap(norm(val))
-                    lum = 0.2126 * rgba[0] + 0.7152 * rgba[1] + 0.0722 * rgba[2]
-                    txt_color = "black" if lum > 0.6 else "white"
-                    outline = "white" if txt_color == "black" else "black"
                     ax.text(
-                        xv + dx, yv + dy, f"{val:0.2e}",
-                        ha="center", va="center", fontsize=9, color=txt_color,
-                        path_effects=[pe.withStroke(linewidth=1.5, foreground=outline)]
+                        xv + cx, yv + cy, f"{val:0.2e}",
+                        ha="center", va="center", fontsize=9, color="black"
                     )
 
-        # Light gridlines
-        for xv in x_vals:
-            ax.axvline(xv, color="0.85", linewidth=0.5)
-        for yv in y_vals:
-            ax.axhline(yv, color="0.85", linewidth=0.5)
+        # Axis limits
+        ax.set_xlim(x_vals[0], x_vals[-1])
+        ax.set_ylim(y_vals[0], y_vals[-1])
+        ax.invert_yaxis()  # optional: match matrix orientation; remove if undesired
 
-        cbar = fig.colorbar(mesh, ax=ax)
-        cbar.set_label(lab)
+        # Ticks at grid lines
+        ax.set_xticks(x_vals)
+        ax.set_yticks(y_vals)
+        ax.tick_params(axis='both', which='both', length=0)
 
         fig.tight_layout()
         fig.savefig(save_path)
