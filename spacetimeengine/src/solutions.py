@@ -498,7 +498,7 @@ class Solution:
         return ozsvath_schucking_metric
     
     def godel(self):
-        """
+        r"""
         Description
         ===========
         Returns Godel metric. A famous classic spacetime which describes time travel.
@@ -510,7 +510,6 @@ class Solution:
         ====================
         ds^{2}={\frac {1}{2\omega ^{2}}}\left[-(dt+e^{x}dy)^{2}+dx^{2}+{\tfrac {1}{2}}e^{2x}dy^{2}+dz^{2}\right],\qquad -\infty <t,x,y,z<\infty ,} {\displaystyle ds^{2}={\frac {1}{2\omega ^{2}}}\left[-(dt+e^{x}dy)^{2}+dx^{2}+{\tfrac {1}{2}}e^{2x}dy^{2}+dz^{2}\right],\qquad -\infty <t,x,y,z<\infty
         """
-        
         f = Rational('1/2') * w**(-2)
         godel_metric = Matrix([
                                       [ f, 0, f * 2*E**(2 * x1), 0 ], 
