@@ -177,7 +177,7 @@ class Solution:
         # Assigns meaning to the coordinates.
         tau = symbols('tau') # Not used currently.
         x0 = Symbol('t') # Time coordinate.
-        x1 = Symbol('r') #
+        x1 = Symbol('r') # Radial coordinate.
         x2 = Symbol('theta') # Polar angle coordinate.
         x3 = Symbol('phi') # Azimuthal angle coordinate.
         # Reference to the coordiante system.
