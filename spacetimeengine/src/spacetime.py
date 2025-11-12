@@ -3090,7 +3090,8 @@ class SpaceTime:
 
     def plot_metric_tensor_grid(self, x_range, y_range, mu=0, nu=0,
                                 x_index=0, y_index=1, num_points=20,
-                                save_path=None, dpi=150, index_config="dd"):
+                                save_path=None, dpi=150, index_config="dd",
+                                x_label=None, y_label=None):
         """
         Plot selected metric component as a plain grid with numeric values only
         (no grayscale background) and save as metric_tensor_plot.png unless overridden.
@@ -3124,8 +3125,8 @@ class SpaceTime:
 
         fig, ax = plt.subplots(figsize=(11, 8), dpi=dpi)
         lab = f"g_{mu}{nu}" if index_config == "dd" else f"g^{mu}{nu}"
-        ax.set_xlabel(str(x_sym))
-        ax.set_ylabel(str(y_sym))
+        ax.set_xlabel(x_label if x_label else str(x_sym))
+        ax.set_ylabel(y_label if y_label else str(y_sym))
         ax.set_title(f"Metric Component {lab} (Values Only)")
 
         # Draw plain grid boxes (no fill)
@@ -3261,8 +3262,10 @@ def main():
 
     # Your plot call
     blackhole_spacetime.plot_metric_tensor_grid(
-    x_range=(2, 200), y_range=(0, 180), mu=1, nu=1, x_index=1, y_index=2, num_points=10,
-    save_path="mnt/data/metric_tensor_plot.png"
+    x_range=(2, 200), y_range=(0, 180),
+    mu=1, nu=1, x_index=1, y_index=2, num_points=10,
+    save_path="mnt/data/metric_tensor_plot.png",
+    x_label="radius r (km)", y_label="polar angle θ (deg)"
 )
 
     # New: Embedding diagram (curved space visualization)
