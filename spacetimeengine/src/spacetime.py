@@ -3244,8 +3244,8 @@ class SpaceTime:
 from sympy import pprint
 
 def main():
-    blackhole_solution = Solution().schwarzschild()
-    blackhole_spacetime = SpaceTime(blackhole_solution)
+    blackhole_solution = Solution().schwarzschild() # Example solution
+    blackhole_spacetime = SpaceTime(blackhole_solution) # Create spacetime object
 
     print("Metric tensor (dd):")
     pprint(blackhole_spacetime.metric_tensor_dd)

@@ -175,15 +175,15 @@ class Solution:
         # Physical constants.
         G, M, c = symbols('G M c')
         # Assigns meaning to the coordinates.
-        tau = symbols('tau')
-        x0 = Symbol('t')
-        x1 = Symbol('r')
-        x2 = Symbol('theta')
-        x3 = Symbol('phi')
+        tau = symbols('tau') # Not used currently.
+        x0 = Symbol('t') # Time coordinate.
+        x1 = Symbol('r') #
+        x2 = Symbol('theta') # Polar angle coordinate.
+        x3 = Symbol('phi') # Azimuthal angle coordinate.
         # Reference to the coordiante system.
         coordinate_set = [x0, x1, x2, x3]
         # Cosmological constant.
-        cosmological_constant = 0
+        cosmological_constant = 0 # No cosmological constant in this solution.
         # Metric solution.
         metric = Matrix([    
                             [ (1-(2*G*M)/(x1*c**2)), 0, 0, 0 ], 
