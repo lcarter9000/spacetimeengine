@@ -3245,7 +3245,7 @@ class SpaceTime:
 from sympy import pprint
 
 def main():
-    blackhole_solution = Solution().schwarzschild() # Example solution
+    blackhole_solution = Solution().schwarzschild() # Returns the classic black hole solution. Uncharged and rotationally stationary
     blackhole_spacetime = SpaceTime(blackhole_solution) # Create spacetime object
 
     print("Metric tensor (dd):")

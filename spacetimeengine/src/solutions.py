@@ -555,7 +555,7 @@ class Solution:
         h_tilde_scalar = 0
         gravitomagnetic_metric = minkowski_metric + h_tilde_tensor + Rational('1/2') * minkowski_metric * h_tilde_scalar
         
-        
+    
         return gravitomagnetic_metric
     
     
