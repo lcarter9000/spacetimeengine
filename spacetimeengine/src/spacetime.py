@@ -626,6 +626,32 @@ class SpaceTime:
                                                             [ 0, 0, 0, 0 ], 
                                                             [ 0, 0, 0, 0 ], 
                                                             [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ]
+                                                        ]
+                                                   ],
+                                                   [    
+                                                        [
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ]
+                                                        ],
+                                                        [
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ]
+                                                        ],
+                                                        [
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ]
+                                                        ],
+                                                        [
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ], 
+                                                            [ 0, 0, 0, 0 ], 
                                                             [  0, 0, 0, 0 ]
                                                         ]
                                                    ],
@@ -1758,7 +1784,7 @@ class SpaceTime:
         else:
             print("Invalid index_config string.") 
     
-    def print_all_weyl_coefficients(self, index_config):
+    def print_all_weyl_coefficient(self, index_config):
         """
         Description
         ===========
@@ -2569,6 +2595,10 @@ class SpaceTime:
                         self.print_stress_energy_coefficient(index_config, mu, nu)
         else:
             print("Invalid index_config string.")
+
+    # Backward-compat alias (old singular name)
+    def set_all_stress_energy_coefficient(self, index_config):
+        return self.set_all_stress_energy_coefficients(index_config)
     
     def compute_stress_energy_coefficient(self, index_config, mu, nu):
         r"""
@@ -3093,8 +3123,9 @@ class SpaceTime:
                                 save_path=None, dpi=150, index_config="dd",
                                 x_label=None, y_label=None):
         """
-        Plot selected metric component as a plain grid with numeric values only
-        (no grayscale background) and save as metric_tensor_plot.png unless overridden.
+        Plot selected metric component as a grid with numeric values and a very
+        light grayscale background per cell, and save as metric_tensor_plot.png
+        unless overridden.
         """
         if save_path is None:
             save_path = os.path.join(os.getcwd(), "metric_tensor_plot.png")
@@ -3127,9 +3158,9 @@ class SpaceTime:
         lab = f"g_{mu}{nu}" if index_config == "dd" else f"g^{mu}{nu}"
         ax.set_xlabel(x_label if x_label else str(x_sym))
         ax.set_ylabel(y_label if y_label else str(y_sym))
-        ax.set_title(f"Metric Component {lab} (Values Only)")
+        ax.set_title(f"Metric Component {lab} (Values + Very Light Grayscale)")
 
-        # Draw plain grid boxes (no fill)
+        # Draw grid boxes with very light grayscale background
         from matplotlib.patches import Rectangle
         if len(x_vals) > 1 and len(y_vals) > 1:
             dx = x_vals[1] - x_vals[0]
@@ -3137,11 +3168,30 @@ class SpaceTime:
         else:
             dx = dy = 1.0
 
+        # Determine a symmetric scaling for subtle grayscale shading
+        vmax = np.nanmax(np.abs(comp_grid))
+        if not np.isfinite(vmax) or vmax == 0:
+            vmax = 1.0  # avoid divide by zero; keeps cells very light
+
+        shade_max = 0.98  # nearly white
+        shade_min = 0.85  # very light gray
+
         for i, xv in enumerate(x_vals[:-1]):
             for j, yv in enumerate(y_vals[:-1]):
+                val = comp_grid[j, i]
+                if np.isfinite(val):
+                    norm_abs = min(abs(val) / vmax, 1.0)
+                else:
+                    norm_abs = 0.0
+                shade = shade_max - (shade_max - shade_min) * norm_abs
                 ax.add_patch(
-                    Rectangle((xv, yv), dx, dy, fill=False,
-                              edgecolor="black", linewidth=0.6)
+                    Rectangle(
+                        (xv, yv), dx, dy,
+                        fill=True,
+                        facecolor=(shade, shade, shade, 1.0),
+                        edgecolor="black",
+                        linewidth=0.6
+                    )
                 )
 
         # Annotate each cell center
