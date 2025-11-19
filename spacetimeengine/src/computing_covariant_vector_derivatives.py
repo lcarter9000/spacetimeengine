@@ -2,6 +2,8 @@
 import sympy as sp
 from pathlib import Path
 
+print(sp.diff.__code__.co_filename)  # Debug: Check SymPy installation path
+
 """Error correction: The import path is not  available in your SymPy version. 
    Remove that import and compute Christoffel symbols directly. Also fix the 
    Linux-only output path.
