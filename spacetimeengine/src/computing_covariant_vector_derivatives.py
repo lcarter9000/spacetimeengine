@@ -18,16 +18,21 @@ g = sp.Matrix([[1, 0], [0, r**2]])
 def christoffel_2nd(g: sp.Matrix, coords):
     n = len(coords)
     g_inv = g.inv()
-    Gamma = [sp.MutableDenseMatrix.zeros(n) for _ in range(n)]  # Γ^k_{ij} as list over k of (i,j) matrices
+    Gamma = [sp.MutableDenseMatrix.zeros(n) for _ in range(n)]
     for k in range(n):
         for i in range(n):
             for j in range(n):
                 s = 0
                 for l in range(n):
-                    s += sp.Rational(1, 2) * g_inv[k, l] * (
+                    term = sp.Rational(1, 2) * g_inv[k, l] * (
                         sp.diff(g[l, j], coords[i]) + sp.diff(g[l, i], coords[j]) - sp.diff(g[i, j], coords[l])
                     )
-                Gamma[k][i, j] = sp.simplify(s)
+                    s += term
+                s = sp.simplify(s)
+                # Debug: print only nonzero components
+                if s != 0:
+                    print(f"Gamma^{k}_[{i}{j}] = {s}")
+                Gamma[k][i, j] = s
     return [sp.Matrix(Gamma[k]) for k in range(n)]
 
 # Step 3: Compute Christoffel symbols of the second kind
@@ -67,7 +72,6 @@ print(f"Computed covariant derivatives and saved LaTeX expressions to: {output_p
    \nabla_{r} v_{theta} = - \frac{20 \theta}{r}
    \nabla_{theta} v_{theta} = 4 r^{2} + 20
 """
-
 
 
 """Non-LaTeX version of the output expressions, written in ordinary math notation:
