@@ -1,0 +1,4 @@
+\nabla_{r} v_{r} = 4
+\nabla_{theta} v_{r} = - \frac{20 \theta}{r}
+\nabla_{r} v_{theta} = - \frac{20 \theta}{r}
+\nabla_{theta} v_{theta} = 4 r^{2} + 20

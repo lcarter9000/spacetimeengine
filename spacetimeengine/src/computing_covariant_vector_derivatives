@@ -1,95 +1,66 @@
-# Creating symbolic covariant derivative computation in polar coordinates using SymPy
-import sympy as sp
-from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensorhead, riemann_cyclic_replace
-from sympy.tensor.riemann import metric_to_Christoffel_2nd
-
-# Step 1: Define polar coordinates
-r, theta = sp.symbols('r theta')
-coords = [r, theta]
-
-# Step 2: Construct the metric tensor g_ij for polar coordinates
-# In polar coordinates: ds² = dr² + r² dθ²
-g = sp.Matrix([[1, 0], [0, r**2]])
-g_inv = g.inv()
-
-# Step 3: Compute Christoffel symbols of the second kind
-Gamma = metric_to_Christoffel_2nd(g, coords)
-
-# Step 4: Define covariant vector field v_i with components v_r = 4r, v_θ = 20θ
-v = sp.Matrix([4*r, 20*theta])
-
-# Step 5: Compute covariant derivatives ∇_j v_i
-# ∇_j v_i = ∂v_i/∂x^j - Γ^k_ij v_k
-n = len(coords)
-nabla_v = [[0]*n for _ in range(n)]
-
-for i in range(n):
-for j in range(n):
-partial = sp.diff(v[i], coords[j])
-correction = sum(Gamma[k][i, j] * v[k] for k in range(n))
-nabla_v[i][j] = sp.simplify(partial - correction)
-
-# Step 6: Display results
-latex_output = []
-for i in range(n):
-for j in range(n):
-expr = sp.simplify(nabla_v[i][j])
-latex_output.append(f"\\nabla_{{{coords[j]}}} v_{{{coords[i]}}} = {sp.latex(expr)}")
-
-# Save LaTeX output to a text file
-output_path = "/mnt/data/covariant_derivatives_latex.txt"
-with open(output_path, "w") as f:
-for line in latex_output:
-f.write(line + "\n")
-
-print("Computed covariant derivatives ∇_j v_i in polar coordinates and saved LaTeX expressions to covariant_derivatives_latex.txt")
-
-# Fixing import error by manually computing Christoffel symbols instead of using unavailable sympy.tensor.riemann
 import sympy as sp
 
-# Step 1: Define polar coordinates
-r, theta = sp.symbols('r theta')
-coords = [r, theta]
+def metric_polar():
+    r, theta = sp.symbols('r theta')
+    g = sp.Matrix([[1, 0],
+                   [0, r**2]])
+    return (r, theta), g, g.inv()
 
-# Step 2: Construct the metric tensor g_ij for polar coordinates
-g = sp.Matrix([[1, 0], [0, r**2]])
-g_inv = g.inv()
+def christoffel_from_metric(g, coords):
+    try:
+        from sympy.tensor.riemann import metric_to_Christoffel_2nd
+        return metric_to_Christoffel_2nd(g, list(coords))  # shape: [k][i,j]
+    except Exception:
+        # Fallback manual computation
+        n = len(coords)
+        g_inv = g.inv()
+        Gamma = [[[0 for _ in range(n)] for _ in range(n)] for _ in range(n)]
+        for k in range(n):
+            for i in range(n):
+                for j in range(n):
+                    term = 0
+                    for l in range(n):
+                        term += g_inv[k, l] * (
+                            sp.diff(g[l, j], coords[i]) +
+                            sp.diff(g[l, i], coords[j]) -
+                            sp.diff(g[i, j], coords[l])
+                        )
+                    Gamma[k][i][j] = sp.simplify(sp.Rational(1, 2) * term)
+        return Gamma  # nested Python lists
 
-# Step 3: Compute Christoffel symbols manually
-n = len(coords)
-Gamma = [[[0 for _ in range(n)] for _ in range(n)] for _ in range(n)]
+def covariant_derivative_covector(v, Gamma, coords):
+    # ∇_j v_i = ∂_j v_i - Γ^k_{ij} v_k
+    n = len(coords)
+    nabla = [[None]*n for _ in range(n)]
+    sympy_style = isinstance(Gamma[0], list)  # manual vs sympy tensor form
+    for i in range(n):
+        for j in range(n):
+            partial = sp.diff(v[i], coords[j])
+            if sympy_style:
+                correction = sum(Gamma[k][i][j] * v[k] for k in range(n))
+            else:
+                correction = sum(Gamma[k][i, j] * v[k] for k in range(n))
+            nabla[i][j] = sp.simplify(partial - correction)
+    return nabla
 
-for k in range(n):
-for i in range(n):
-for j in range(n):
-term = 0
-for l in range(n):
-term += g_inv[k, l] * (sp.diff(g[l, j], coords[i]) + sp.diff(g[l, i], coords[j]) - sp.diff(g[i, j], coords[l]))
-Gamma[k][i][j] = sp.simplify(0.5 * term)
+def main(output_path="covariant_derivatives_latex.txt"):
+    (r, theta), g, _ = metric_polar()
+    coords = [r, theta]
+    Gamma = christoffel_from_metric(g, coords)
+    # Covariant vector components v_r, v_theta
+    v = sp.Matrix([4*r, 20*theta])
+    nabla_v = covariant_derivative_covector(v, Gamma, coords)
 
-# Step 4: Define covariant vector field v_i with components v_r = 4r, v_θ = 20θ
-v = sp.Matrix([4*r, 20*theta])
+    lines = []
+    for i, ci in enumerate(coords):
+        for j, cj in enumerate(coords):
+            expr = nabla_v[i][j]
+            lines.append(f"\\nabla_{{{cj}}} v_{{{ci}}} = {sp.latex(expr)}")
 
-# Step 5: Compute covariant derivatives ∇_j v_i
-nabla_v = [[0]*n for _ in range(n)]
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
 
-for i in range(n):
-for j in range(n):
-partial = sp.diff(v[i], coords[j])
-correction = sum(Gamma[k][i][j] * v[k] for k in range(n))
-nabla_v[i][j] = sp.simplify(partial - correction)
+    print("Computed covariant derivatives and saved LaTeX to", output_path)
 
-# Step 6: Display results
-latex_output = []
-for i in range(n):
-for j in range(n):
-expr = nabla_v[i][j]
-latex_output.append(f"\\nabla_{{{coords[j]}}} v_{{{coords[i]}}} = {sp.latex(expr)}")
-
-# Save LaTeX output to a text file
-output_path = "/mnt/data/covariant_derivatives_latex.txt"
-with open(output_path, "w") as f:
-for line in latex_output:
-f.write(line + "\n")
-
-print("Computed covariant derivatives ∇_j v_i in polar coordinates and saved LaTeX expressions to covariant_derivatives_latex.txt")
+if __name__ == "__main__":
+    main()
