@@ -2,6 +2,11 @@
 import sympy as sp
 from pathlib import Path
 
+"""Error correction: The import path is not  available in your SymPy version. 
+   Remove that import and compute Christoffel symbols directly. Also fix the 
+   Linux-only output path.
+"""
+
 # Step 1: Define polar coordinates
 r, theta = sp.symbols("r theta")
 coords = [r, theta]
