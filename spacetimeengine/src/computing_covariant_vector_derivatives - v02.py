@@ -2,11 +2,6 @@
 import sympy as sp
 from pathlib import Path
 
-"""Error correction: The import path is not  available in your SymPy version. 
-   Remove that import and compute Christoffel symbols directly. Also fix the 
-   Linux-only output path.
-"""
-
 # Step 1: Define polar coordinates
 r, theta = sp.symbols("r theta")
 coords = [r, theta]
@@ -60,14 +55,3 @@ with output_path.open("w", encoding="utf-8") as f:
         f.write(line + "\n")
 
 print(f"Computed covariant derivatives and saved LaTeX expressions to: {output_path}")
-
-"""Non-LaTeX version of the output expressions, written in ordinary math notation:
-- Partial derivative of v_r with respect to r:
-  ∂v_r / ∂r = 4
-- Partial derivative of v_r with respect to \theta :
-  ∂v_r / ∂θ = - (20·θ) / r
-- Partial derivative of v_{\theta } with respect to r:
-  ∂v_θ / ∂r = - (20·θ) / r
-- Partial derivative of v_{\theta } with respect to \theta :
-  ∂v_θ / ∂θ = 4·r² + 20
-"""
