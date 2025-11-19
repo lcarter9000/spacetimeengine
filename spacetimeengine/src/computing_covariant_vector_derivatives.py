@@ -61,6 +61,15 @@ with output_path.open("w", encoding="utf-8") as f:
 
 print(f"Computed covariant derivatives and saved LaTeX expressions to: {output_path}")
 
+""" Layex format  of the output:
+   \nabla_{r} v_{r} = 4
+   \nabla_{theta} v_{r} = - \frac{20 \theta}{r}
+   \nabla_{r} v_{theta} = - \frac{20 \theta}{r}
+   \nabla_{theta} v_{theta} = 4 r^{2} + 20
+"""
+
+
+
 """Non-LaTeX version of the output expressions, written in ordinary math notation:
 - Partial derivative of v_r with respect to r:
   ∂v_r / ∂r = 4
