@@ -2,6 +2,41 @@
 import sympy as sp
 from pathlib import Path
 import inspect
+import sys
+import pdb
+
+
+
+"""
+# ┌────────┬────────────────────────────────────────────────────────────┐
+# │ Command│ Description                                                │
+# ├────────┼────────────────────────────────────────────────────────────┤
+# │ c      │ Continue execution until next breakpoint or trace call     │
+# │ n      │ Step to the next line in the current function              │
+# │ s      │ Step into the next function call                           │
+# │ r      │ Continue until the current function returns                │
+# │ q      │ Quit the debugger and stop execution                       │
+# │ l      │ List source code around the current line                   │
+# │ p var  │ Print the value of variable `var`                          │
+# │ b line │ Set breakpoint at line number `line`                       │
+# │ b func │ Set breakpoint at function `func`                          │
+# │ cl     │ Clear all breakpoints                                      │
+# │ h      │ Show help on commands                                      │
+# └────────┴────────────────────────────────────────────────────────────┘
+"""
+
+def trace_calls(frame, event, arg):
+    if event == 'call':
+        code = frame.f_code
+        func_name = code.co_name
+        filename = code.co_filename
+        lineno = frame.f_lineno
+        print(f"\n🔍 Pausing at function: {func_name} ({filename}:{lineno})")
+        pdb.set_trace()  # Pause execution here
+    return trace_calls  # Continue tracing deeper calls
+
+#ys.settrace(trace_calls) # Start tracing function calls
+
 
 # Optional: show source file for the top-level diff wrapper
 print("sympy.diff source file:", sp.diff.__code__.co_filename)
@@ -68,3 +103,5 @@ with out_path.open("w", encoding="utf-8") as f:
         f.write(line + "\n")
 
 print(f"Saved results to {out_path}")
+
+sys.settrace(None)  # Stop tracing after main
