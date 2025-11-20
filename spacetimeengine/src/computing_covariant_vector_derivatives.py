@@ -35,7 +35,7 @@ def trace_calls(frame, event, arg):
         pdb.set_trace()  # Pause execution here
     return trace_calls  # Continue tracing deeper calls
 
-#ys.settrace(trace_calls) # Start tracing function calls
+
 
 
 # Optional: show source file for the top-level diff wrapper
@@ -48,6 +48,8 @@ coords = [r, theta]
 
 # Step 2: Metric tensor in polar coordinates: diag(1, r^2)
 g = sp.Matrix([[1, 0], [0, r**2]])
+
+sys.settrace(trace_calls) # Start tracing function calls
 
 def christoffel_2nd(g: sp.Matrix, coords):
     n = len(coords)
