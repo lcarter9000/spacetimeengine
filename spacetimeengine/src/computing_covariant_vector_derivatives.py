@@ -80,15 +80,28 @@ def christoffel_2nd_fd(g: sp.Matrix, coords, h_r=1e-6, h_theta=1e-6):
       ∂_x g_{ab} ≈ (g_{ab}(x+h) - g_{ab}(x-h)) / (2h)
     h_r, h_theta are step sizes for r, theta.
     """
-    r_sym, theta_sym = coords
-    steps = {r_sym: h_r, theta_sym: h_theta}
-    n = len(coords)
-    g_inv = g.inv()
-    Gamma = [sp.MutableDenseMatrix.zeros(n) for _ in range(n)]
+    r_sym, theta_sym = coords # Unpack coordinate symbols
+    steps = {r_sym: h_r, theta_sym: h_theta} # Step sizes for each coordinate
+    n = len(coords) # Dimension of the manifold
+    g_inv = g.inv() # Inverse metric
+    Gamma = [sp.MutableDenseMatrix.zeros(n) for _ in range(n)] 
+    # Above code creates a list of n fresh SymPy matrices, each initialized to zeros with shape n × n
 
-    def fd_derivative(expr, var, h):
+    def fd_derivative(expr, var, h): # Finite difference derivative
         # Central difference: (f(var+h) - f(var-h))/(2h)
         return (expr.subs(var, var + h) - expr.subs(var, var - h)) / (2*h)
+    
+    """
+    The above code performs a SymPy symbolic substitution. It returns a new expression where every
+    occurrence of var in expr is replaced by the shifted symbol var + h. In the surrounding code, 
+    it's used to evaluate the expression at a small offset to build a central finite-difference, 
+    e.g., f(var + h).
+
+    The substitution is purely symbolic—it does not numerically evaluate the expression. For example, 
+    if expr is r**2 and var is r, the result becomes (r + h)**2. This operation is safe even though the 
+    replacement contains var; SymPy applies the substitution once, not recursively, so it won't loop. 
+    If expr is a matrix, the substitution is applied element-wise.
+    """
 
     for k in range(n):
         for i in range(n):
