@@ -81,7 +81,7 @@ def christoffel_2nd_fd(g: sp.Matrix, coords, h_r=1e-6, h_theta=1e-6):
     h_r, h_theta are step sizes for r, theta.
     """
     r_sym, theta_sym = coords # Unpack coordinate symbols
-    steps = {r_sym: h_r, theta_sym: h_theta} # Step sizes for each coordinate
+    steps = {r_sym: h_r, theta_sym: h_theta} # Dictionary contains step sizes for each coordinate
     n = len(coords) # Dimension of the manifold
     g_inv = g.inv() # Inverse metric
     Gamma = [sp.MutableDenseMatrix.zeros(n) for _ in range(n)] 
@@ -89,6 +89,9 @@ def christoffel_2nd_fd(g: sp.Matrix, coords, h_r=1e-6, h_theta=1e-6):
 
     def fd_derivative(expr, var, h): # Finite difference derivative
         # Central difference: (f(var+h) - f(var-h))/(2h)
+        print("expr:",expr)
+        print("var",var)
+        print("h:",h)
         return (expr.subs(var, var + h) - expr.subs(var, var - h)) / (2*h)
     
     """
@@ -122,7 +125,7 @@ def christoffel_2nd_fd(g: sp.Matrix, coords, h_r=1e-6, h_theta=1e-6):
                     else:
                         dg_ij_dl = fd_derivative(g[i, j], theta_sym, steps[theta_sym])
 
-                    term = sp.Rational(1, 2) * g_inv[k, l] * (dg_lj_di + dg_li_dj - dg_ij_dl)
+                    term = sp.Rational(1, 2) * g_inv[k, l] * (dg_lj_di + dg_li_dj - dg_ij_dl) # Finite difference term
                     s += sp.simplify(term)
                 s = sp.simplify(s)
                 if s != 0:
