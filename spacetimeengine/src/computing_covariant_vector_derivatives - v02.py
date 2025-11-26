@@ -56,3 +56,16 @@ with output_path.open("w", encoding="utf-8") as f:
         f.write(line + "\n")
 
 print(f"Computed covariant derivatives and saved LaTeX expressions to: {output_path}")
+
+"""# Covariant derivatives (LaTeX):
+\nabla_{r} v_{r} = 4
+\nabla_{theta} v_{r} = - \frac{20.0 \theta}{r}
+\nabla_{r} v_{theta} = - \frac{20.0 \theta}{r}
+\nabla_{theta} v_{theta} = 4.0 r^{2} + 20
+
+# Covariant derivatives (plain):
+∇_r v_r = 4
+∇_theta v_r = -20.0*theta/r
+∇_r v_theta = -20.0*theta/r
+∇_theta v_theta = 4.0*r**2 + 20
+"""
