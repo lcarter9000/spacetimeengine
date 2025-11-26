@@ -8,7 +8,7 @@ y = sp.Function('y')
 ode = sp.Eq(sp.diff(y(x), x), y(x)) # Define the ODE dy/dx = y
 
 # Solve the ODE
-solution = sp.dsolve(ode, y(x)) # Solve the ODE without initial conditions
+solution = sp.dsolve(ode, y(x), n=2) # Solve the ODE without initial conditions
 
 """
 (function) def dsolve(
