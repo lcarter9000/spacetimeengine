@@ -2,7 +2,6 @@ import sympy as sp
 import numpy as np
 import sys
 import subprocess, os
-import tex
 
 # sp.init_printing()
 
@@ -142,12 +141,12 @@ def main():
         file.write('\\end{document}\n')
     fileHandle.close()
 
-    pdf_conversion_process = subprocess.call('pdflatex '+ filename, shell=True)
+    pdf_conversion_process = subprocess.call('pdflatex ' + filename, shell=True)
 
     if pdf_conversion_process != 0:
         print('Check result! Exit code not 0')
     else:
-        os.system("xdg-open " + filename + ".pdf")
+        os.system(f'start "" "{filename}.pdf"')
 
 
 
