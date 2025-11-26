@@ -7,21 +7,22 @@ r, theta = sp.symbols("r theta")
 coords = [r, theta]
 
 # Step 2: Construct the metric tensor g_ij for polar coordinates
-# In polar coordinates: ds^2 = dr^2 + r^2 dθ^2
+# In polar coordinates: ds^2 = dr^2 + r^2 dθ^2 (Pythagorean theorem in curved coordinates)
 g = sp.Matrix([[1, 0], [0, r**2]])
 
-def christoffel_2nd(g: sp.Matrix, coords):
+def christoffel_2nd(g: sp.Matrix, coords): # Compute Christoffel symbols of the second kind
     n = len(coords)
     g_inv = g.inv()
     Gamma = [sp.MutableDenseMatrix.zeros(n) for _ in range(n)]  # Γ^k_{ij} as list over k of (i,j) matrices
     for k in range(n):
         for i in range(n):
             for j in range(n):
-                s = 0
+                s = 0 # Summation over l
                 for l in range(n):
                     s += sp.Rational(1, 2) * g_inv[k, l] * (
                         sp.diff(g[l, j], coords[i]) + sp.diff(g[l, i], coords[j]) - sp.diff(g[i, j], coords[l])
                     )
+                    print(f"Intermediate Gamma^{k}_[{i}{j}] after l={l}: {s}")
                 Gamma[k][i, j] = sp.simplify(s)
     return [sp.Matrix(Gamma[k]) for k in range(n)]
 
