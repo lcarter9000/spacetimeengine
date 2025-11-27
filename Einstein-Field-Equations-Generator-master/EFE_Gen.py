@@ -74,6 +74,25 @@ def FRW_metric(axes):
     a, k = sp.symbols('a k')
     return sp.Matrix(([-1, 0, 0, 0],[0, a**2/(1-k*axes[1]**2), 0, 0], [0, 0, a**2*axes[1]**2, 0],[0, 0, 0, a**2*axes[1]**2*sp.sin(axes[2])**2]))
 
+def _latex_bmatrix(expr: sp.Matrix) -> str:
+    """Convert SymPy Matrix LaTeX to bmatrix for mathtext compatibility."""
+    s = sp.latex(expr)
+    s = s.replace(r"\left[\begin{matrix}", r"\begin{bmatrix}")
+    s = s.replace(r"\end{matrix}\right]", r"\end{bmatrix}")
+    return s
+
+def _sanitize_latex(expr) -> str:
+    s = sp.latex(expr)
+    # remove \left / \right which often break mathtext
+    return s.replace(r"\left", "").replace(r"\right", "")
+
+def _matrix_plain(name: str, M: sp.Matrix) -> list[str]:
+    rows = []
+    for i in range(M.rows):
+        row_entries = "  ".join(_sanitize_latex(sp.simplify(M[i, j])) for j in range(M.cols))
+        rows.append(f"{name}[{i}, *] = {row_entries}")
+    return rows
+
 def main():
     x = sp.symbols('x0 x1 x2 x3')
     sp.init_printing(use_unicode=True)
@@ -91,34 +110,42 @@ def main():
 
     filename = "EinsteinFieldEquations"
 
-    # Build LaTeX-like lines for rendering with mathtext
+    # Build lines (avoid full LaTeX matrices)
     lines = []
-    lines.append(r"\textbf{Important Symbols and Tensors}")
-    lines.append(r"\textbf{Metric}")
-    lines.append(r"$g_{\mu\nu} = " + sp.latex(metric_tensor) + r"$")
-    lines.append(r"\textbf{Christoffel Symbols}")
+    lines.append("Important Symbols and Tensors")
+    lines.append("Metric tensor g_{mu nu}:")
+    lines += _matrix_plain("g", metric_tensor)
+
+    lines.append("Non‑zero Christoffel Symbols:")
     for i in range(4):
         for j in range(4):
             for k in range(4):
                 expr = christoffel_symbols[i][j][k]
                 if expr == 0:
                     continue
-                lines.append(r"$\Gamma^{" + str(i) + r"}_{" + str(j) + str(k) + r"} = " + sp.latex(expr) + r"$")
-    lines.append(r"\textbf{Ricci Tensor}")
-    lines.append(r"$R_{\mu\nu} = " + sp.latex(ricci_curvature_tensor) + r"$")
-    lines.append(r"\textbf{Curvature Scalar}")
-    lines.append(r"$R = " + sp.latex(curvature_scalar) + r"$")
-    lines.append(r"\textbf{Einstein Tensor}")
-    lines.append(r"$G_{\mu\nu} = R_{\mu\nu} - R g_{\mu\nu} = " + sp.latex(einstein_tensor) + r"$")
+                lines.append("$\\Gamma^{" + str(i) + "}_{" + str(j) + str(k) + "} = " + _sanitize_latex(expr) + "$")
+
+    lines.append("Ricci Tensor R_{mu nu}:")
+    lines += _matrix_plain("R", ricci_curvature_tensor)
+
+    lines.append("Curvature Scalar:")
+    lines.append("$R = " + _sanitize_latex(curvature_scalar) + "$")
+
+    lines.append("Einstein Tensor G_{mu nu}:")
+    lines += _matrix_plain("G", einstein_tensor)
 
     # Render to PNG
-    fig_height = max(2, 0.55 * len(lines))  # scale height with number of lines
-    fig, ax = plt.subplots(figsize=(10, fig_height))
+    fig_height = max(2, 0.45 * len(lines))
+    fig, ax = plt.subplots(figsize=(11, fig_height))
     ax.axis('off')
 
     for idx, line in enumerate(lines):
         y = 1 - (idx + 1) / (len(lines) + 1)
-        ax.text(0.02, y, line, fontsize=12, va='top')
+        # mathtext only for lines starting and ending with $
+        if line.startswith("$") and line.endswith("$"):
+            ax.text(0.02, y, line, fontsize=11, va='top')
+        else:
+            ax.text(0.02, y, line, fontsize=10, va='top', family="monospace")
 
     out_path = f"{filename}.png"
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
@@ -126,8 +153,7 @@ def main():
 
     if os.path.exists(out_path):
         print(f"PNG written: {out_path}")
-        # Open the PNG with default viewer on Windows
-        os.system(f'start "" "{out_path}"')
+        os.system(f'start \"\" \"{out_path}\"')
     else:
         print("Failed to create PNG.")
 
