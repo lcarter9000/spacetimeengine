@@ -141,13 +141,12 @@ def main():
         file.write('\\end{document}\n')
     fileHandle.close()
 
-    pdf_conversion_process = subprocess.call('pdflatex ' + filename, shell=True)
-
-    if pdf_conversion_process != 0:
-        print('Check result! Exit code not 0')
+    # Instead of compiling to PDF, open the .tex file with the default app
+    tex_path = f'{filename}.tex'
+    if os.path.exists(tex_path):
+        os.system(f'start "" "{tex_path}"')
     else:
-        os.system(f'start "" "{filename}.pdf"')
-
+        print(f'LaTeX source not found: {tex_path}')
 
 
 if __name__ == "__main__":
