@@ -147,7 +147,8 @@ def main():
         else:
             ax.text(0.02, y, line, fontsize=10, va='top', family="monospace")
 
-    out_path = f"{filename}.png"
+    out_dir = os.path.dirname(__file__)
+    out_path = os.path.join(out_dir, f"{filename}.png")
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close(fig)
 
