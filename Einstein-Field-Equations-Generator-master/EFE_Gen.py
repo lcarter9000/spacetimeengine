@@ -4,63 +4,67 @@ import sys
 import os
 import matplotlib.pyplot as plt
 
-def get_christoffel_symbols(metric, axes):
-    metric_inv = metric.inv()
-    christoffel = np.zeros([4, 4, 4], dtype = type(sp.Symbol('')))
+def get_christoffel_symbols(metric, axes): # Calculate Christoffel symbols from metric tensor
+    metric_inv = metric.inv() # Inverse of the metric tensor
+    christoffel = np.zeros([4, 4, 4], dtype = type(sp.Symbol(''))) # Initialize Christoffel symbols array
 
-    for i in range(4):
-        for j in range(4):
-            for k in range(4):
-                for s in range(4):
-                    christoffel[i][j][k] += metric_inv[s, i] * (sp.diff(metric[s, j], axes[k]) + sp.diff(metric[s, k], axes[j]) - sp.diff(metric[j, k], axes[i]))
-                christoffel[i][j][k] = christoffel[i][j][k] / 2
-                christoffel[i][j][k] = sp.simplify(christoffel[i][j][k])
-    return christoffel
+    for i in range(4): # Loop over indices 
+        for j in range(4): # # Loop over indices
+            for k in range(4): # Loop over indices
+                for s in range(4): # Summation index
+                    christoffel[i][j][k] += metric_inv[s, i] * (sp.diff(metric[s, j], axes[k]) + sp.diff(metric[s, k], 
+                        axes[j]) - sp.diff(metric[j, k], axes[i])) # Compute Christoffel symbol component
+                christoffel[i][j][k] = christoffel[i][j][k] / 2 # Finalize Christoffel symbol component
+                christoffel[i][j][k] = sp.simplify(christoffel[i][j][k]) # Simplify expression
+        return christoffel
 
-def get_reimann_tensor(christoffel_symbols, axes):
-    reimann = np.zeros([4, 4, 4, 4], dtype = type(sp.Symbol('')))
-    for i in range(4):
-        for j in range(4):
-            for k in range(4):
-                for l in range(4):
-                    differential_part = 0
-                    coeff_sum_part = 0
-                    differential_part = sp.diff(christoffel_symbols[i][j][l], axes[k]) - sp.diff(christoffel_symbols[i][k][l], axes[j])
-                    for p in range(4):
-                        coeff_sum_part += christoffel_symbols[p][j][l] * christoffel_symbols[i][p][k] - christoffel_symbols[p][k][l] * christoffel_symbols[i][p][j]
-                    reimann[i][j][k][l] = differential_part + coeff_sum_part
-                    reimann[i][j][k][l] = sp.simplify(reimann[i][j][k][l])
+def get_reimann_tensor(christoffel_symbols, axes): # Calculate Riemann curvature tensor from Christoffel symbols
+    reimann = np.zeros([4, 4, 4, 4], dtype = type(sp.Symbol(''))) # Initialize Riemann tensor array
+    for i in range(4): # Loop over indices
+        for j in range(4): # Loop over indices
+            for k in range(4): # Loop over indices
+                for l in range(4): # Loop over indices
+                    differential_part = 0 # Initialize differential part
+                    coeff_sum_part = 0  # Initialize coefficient sum part
+                    differential_part = sp.diff(christoffel_symbols[i][j][l], axes[k]) 
+                    - sp.diff(christoffel_symbols[i][k][l], axes[j]) # Compute differential part
+
+                    for p in range(4): # Summation index
+                        coeff_sum_part += christoffel_symbols[p][j][l] * christoffel_symbols[i][p][k]
+                        - christoffel_symbols[p][k][l] * christoffel_symbols[i][p][j] # Compute coefficient sum part
+                    reimann[i][j][k][l] = differential_part + coeff_sum_part # Combine parts to get Riemann tensor component
+                    reimann[i][j][k][l] = sp.simplify(reimann[i][j][k][l]) # Simplify expression
     return reimann
 
-def get_ricci_tensor(reimann_tensor):
-    ricci = np.zeros([4, 4], dtype=type(sp.Symbol('')))
-    for i in range(4):
-        for j in range(4):
-            for k in range(4):
-                ricci[i][j] += reimann_tensor[k, i, k, j]
-            ricci[i][j] = sp.simplify(ricci[i][j])
+def get_ricci_tensor(reimann_tensor): #$ Calculate Ricci curvature tensor from Riemann tensor
+    ricci = np.zeros([4, 4], dtype=type(sp.Symbol(''))) # Initialize Ricci tensor array
+    for i in range(4): # Loop over indices
+        for j in range(4): # Loop over indices
+            for k in range(4): # Summation index
+                ricci[i][j] += reimann_tensor[k, i, k, j] # Compute Ricci tensor component
+            ricci[i][j] = sp.simplify(ricci[i][j]) # Simplify expression
     print('\nRicci Curvature Tensor: \n', sp.Matrix(ricci))
     return sp.Matrix(ricci)
 
-def raise_one_index(tensor, metric):
-    shape = tensor.shape
-    rank = len(shape)
-    metric_inv = metric.inv()
-    raised_tensor = np.zeros(shape, dtype=type(sp.Symbol('')))
-    for i in range(4):
-        for j in range(4):
-            for k in range(4):
-                raised_tensor[i][j] += metric_inv[i, k] * tensor[k, j]
-            raised_tensor[i][j] = sp.simplify(raised_tensor[i][j])
+def raise_one_index(tensor, metric): # Raise one index of a tensor using the metric tensor
+    shape = tensor.shape # Get shape of the tensor
+    rank = len(shape) # Get rank of the tensor
+    metric_inv = metric.inv() # Inverse of the metric tensor
+    raised_tensor = np.zeros(shape, dtype=type(sp.Symbol(''))) # Initialize raised tensor array
+    for i in range(4): # Loop over indices
+        for j in range(4): # Loop over indices
+            for k in range(4): # Summation index
+                raised_tensor[i][j] += metric_inv[i, k] * tensor[k, j] # Raise index
+            raised_tensor[i][j] = sp.simplify(raised_tensor[i][j]) # Simplify expression
     return sp.Matrix(raised_tensor)
 
-def get_curvature_scalar(raised_ricci):
-    curvature_scalar = 0
-    for i in range(4):
-        for j in range(4):
-            curvature_scalar += raised_ricci[i, j]
-    curvature_scalar = sp.simplify(curvature_scalar)
-    print('\nCurvature Scalar: \n', curvature_scalar)
+def get_curvature_scalar(raised_ricci): # Calculate curvature scalar from raised Ricci tensor
+    curvature_scalar = 0 # Initialize curvature scalar
+    for i in range(4): # 
+        for j in range(4): # Loop over indices
+            curvature_scalar += raised_ricci[i, j] # Compute curvature scalar
+    curvature_scalar = sp.simplify(curvature_scalar) # Simplify expression
+    print('\nCurvature Scalar: \n', curvature_scalar) # Print curvature scalar
     return curvature_scalar
 
 def conform_compacted_metric(axes):
